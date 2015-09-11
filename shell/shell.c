@@ -83,9 +83,7 @@ char *cmd_readline(void) {
 };
 
 char **cmd_parse(char *line) {
-     // printf("hey, here is parse!!!!\n");
-     // char **tmp = {&line};
-     return ;
+     return 1;
 };
 
 int cmd_launch(char **args) {
@@ -95,18 +93,15 @@ int cmd_launch(char **args) {
 
 int cmd_execute(char **args) {
     int i;
-    
     if (args[0] == NULL) {
         // empty command input, skip and continue
         return 1;
     };
-
     for (i = 0; i < builtin_str_leng(); i++) {
          if (strcmp(args[0], builtin_str[i]) == 0) {
              return (*builtin_func[i])(args);
          };
     };
-
     return cmd_launch(args);
 }; 
 
