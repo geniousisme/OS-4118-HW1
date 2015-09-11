@@ -82,8 +82,37 @@ char *cmd_readline(void) {
      };
 };
 
+#define MAX_TOK_BUFF_SIZE 64 
+#define TOKEN_DELIM       " \t\n\r"
+
 char **cmd_parse(char *line) {
-     return 1;
+     int buffer_size = MAX_TOK_BUFF_SIZE, pos = 0;
+     char **tokens = malloc(buffer_size * sizeof(char*));
+     char *token; //, **tokens_backup;
+  
+     token = strtok(line, TOKEN_DELIM);
+     while (token != NULL) {
+            tokens[pos] = token;
+            pos++;
+            // if token exceed the max token buffer size, relloc
+            if (pos >= buffer_size) {
+                buffer_size += MAX_TOK_BUFF_SIZE;
+                tokens = realloc(tokens, buffer_size * sizeof(char*));
+                if (!tokens) {
+                    fprintf(stderr, "allocation error!!");
+                    exit(EXIT_FAILURE);
+                };
+            };
+            token = strtok(NULL, TOKEN_DELIM);
+     };
+     tokens[pos] = NULL;
+     // int i = 0;
+     // while (tokens[i] != NULL) {
+     //        printf("tokens[%d]: %s\n", i, tokens[i]);
+     //        // tokens++;
+     //        i++;
+     // };
+     return tokens;
 };
 
 int cmd_launch(char **args) {
