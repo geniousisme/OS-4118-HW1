@@ -50,7 +50,7 @@ int cmd_history(char **args) {
     return 1;
 };
 
-int cmd_exit(char **args) {
+int cmd_exit(char **args) { // exit program, return 0
     return 0;
 };
 
