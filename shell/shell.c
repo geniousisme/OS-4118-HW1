@@ -11,7 +11,6 @@ int cmd_path(char **args);
 int cmd_history(char **args);
 int cmd_exit(char **args);
 
-
 char *builtin_str[] = {
      "cd",
      "pwd",
@@ -35,6 +34,7 @@ int builtin_str_leng(void) {
 #define MAX_BUFF_SIZE 1024;
 
 int cmd_cd(char **args) {
+
     return 1;
 };
 
@@ -106,12 +106,6 @@ char **cmd_parse(char *line) {
             token = strtok(NULL, TOKEN_DELIM);
      };
      tokens[pos] = NULL;
-     // int i = 0;
-     // while (tokens[i] != NULL) {
-     //        printf("tokens[%d]: %s\n", i, tokens[i]);
-     //        // tokens++;
-     //        i++;
-     // };
      return tokens;
 };
 
@@ -121,7 +115,7 @@ int cmd_launch(char **args) {
     pid = fork();
     if (pid == 0) { // child process
         if (execvp(args[0], args) ==  -1) {
-            perror("error");
+            perror("chris");
         };
         exit(EXIT_FAILURE);
     }
@@ -131,11 +125,10 @@ int cmd_launch(char **args) {
              } while (!(WIFEXITED(status) || WIFSIGNALED(status)));
     }
     else { // pid < 0, error
-        perror("error");
+        perror("chris");
     }
     return 1;
 };
-
 
 int cmd_execute(char **args) {
     int i;
@@ -150,7 +143,6 @@ int cmd_execute(char **args) {
     };
     return cmd_launch(args);
 }; 
-
 
 void cmd_loop(void) {
      char *line;
