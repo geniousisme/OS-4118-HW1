@@ -51,7 +51,7 @@ int cmd_history(char **args) {
 };
 
 int cmd_exit(char **args) {
-    return 1;
+    return 0;
 };
 
 char *cmd_readline(void) {
@@ -116,6 +116,23 @@ char **cmd_parse(char *line) {
 };
 
 int cmd_launch(char **args) {
+    pid_t pid;
+    int status;
+    pid = fork();
+    if (pid == 0) { // child process
+        if (execvp(args[0], args) ==  -1) {
+            perror("error");
+        };
+        exit(EXIT_FAILURE);
+    }
+    else if (pid > 0) { // parent process
+             do {
+               waitpid(pid, &status, WUNTRACED);
+             } while (!(WIFEXITED(status) || WIFSIGNALED(status)));
+    }
+    else { // pid < 0, error
+        perror("error");
+    }
     return 1;
 };
 
@@ -126,7 +143,7 @@ int cmd_execute(char **args) {
         // empty command input, skip and continue
         return 1;
     };
-    for (i = 0; i < builtin_str_leng(); i++) {
+    for (i = 0; i < builtin_str_leng(); i++) { // check if there is builtin cmd
          if (strcmp(args[0], builtin_str[i]) == 0) {
              return (*builtin_func[i])(args);
          };
