@@ -31,14 +31,25 @@ int builtin_str_leng(void) {
     return sizeof(builtin_str) / sizeof(char *);
 };
 
-#define MAX_BUFF_SIZE 1024;
-
 int cmd_cd(char **args) {
-
+    if (args[1] == NULL) {
+        fprintf(stderr, "chris: come on, cmd needs direcoty to move to");
+    }
+    else if (chdir(args[1]) == -1) {
+             perror("chris");
+    };
     return 1;
 };
 
 int cmd_pwd(char **args) {
+    char *buffer = malloc(64 * sizeof(char));
+    if (getcwd(buffer, -1) == NULL) { // set size = -1 to make getcwd malloc automatically
+        perror("chris");        
+    }
+    else {
+        printf("%s\n", buffer);
+        free(buffer);
+    };
     return 1;
 };
 
@@ -53,6 +64,8 @@ int cmd_history(char **args) {
 int cmd_exit(char **args) { // exit program, return 0
     return 0;
 };
+
+#define MAX_BUFF_SIZE 1024;
 
 char *cmd_readline(void) {
      int buffer_size = MAX_BUFF_SIZE;
