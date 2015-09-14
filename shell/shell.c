@@ -5,11 +5,14 @@
 #include <string.h>
 
 
+
 int cmd_cd(char **args);
 int cmd_pwd(char **args);
 int cmd_path(char **args);
 int cmd_history(char **args);
 int cmd_exit(char **args);
+
+char *origin_path_env, *self_path;
 
 char *builtin_str[] = {
      "cd",
@@ -41,7 +44,7 @@ int cmd_cd(char **args) {
     return 1;
 };
 
-int cmd_pwd(char **args) {
+int cmd_pwd(char **args) { // show the current working path, ignore all args
     char *buffer = malloc(64 * sizeof(char));
     if (getcwd(buffer, -1) == NULL) { // set size = -1 to make getcwd malloc automatically
         perror("chris");        
@@ -53,8 +56,24 @@ int cmd_pwd(char **args) {
     return 1;
 };
 
+
+
 int cmd_path(char **args) {
     return 1;
+};
+
+#define DEFAULT_PATH ""
+#define ORIGIN_PATH  "ORIGIN_PATH"
+
+void change_path_env(char *new_path) {
+     if (strcmp(new_path, "") == 0) {
+         origin_path_env = getenv("PATH");
+         unsetenv("PATH");
+     }
+     else if (strcmp(new_path, ORIGIN_PATH) == 0){
+              // printf("wtf???????");
+              setenv("PATH", origin_path_env, 1);
+     };
 };
 
 int cmd_history(char **args) {
@@ -127,6 +146,7 @@ int cmd_launch(char **args) {
     int status;
     pid = fork();
     if (pid == 0) { // child process
+        change_path_env(DEFAULT_PATH);
         if (execvp(args[0], args) ==  -1) {
             perror("chris");
         };
@@ -161,6 +181,8 @@ void cmd_loop(void) {
      char *line;
      char **args;
      int  status = 1;
+     // change_path_env(DEFAULT_PATH);
+     // printf("PATH: %s\n", getenv("PATH"));
      while(status) {
            printf("$ ");
            line   = cmd_readline();
@@ -169,6 +191,8 @@ void cmd_loop(void) {
            free(line);
            free(args);
      };
+     // change_path_env(ORIGIN_PATH);
+     // printf("PATH: %s\n", getenv("PATH"));
 };
 
 int main (int argc, char **argv) {
