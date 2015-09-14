@@ -78,8 +78,7 @@ void change_path_env(char *new_path) {
                 environ[15] = "PATH=";
         }
         else {
-                // char *tmp = malloc(sizeof(char) * (strlen(new_path)   +        \
-                //                                    strlen(environ[15]) + 1));
+                
                 // strcpy(tmp, environ[15]);
                 // strcat(tmp, new_path);
                 // printf("tmp: %s\n", tmp);
