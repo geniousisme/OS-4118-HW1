@@ -59,7 +59,7 @@ int cmd_pwd(char **args) {
 };
 
 #define DEFAULT_PATH ""
-#define GET_PATH_ENV getenv("PATH")
+#define PATH_ENV getenv("PATH")
 
 
 char *string_concat(char *str1, char *str2) {  
@@ -91,29 +91,75 @@ void add_path(char *path_to_add) {
         };
         char *new_path;
         /* change to get path env from getenv, but not self_path */
-        if (strcmp(GET_PATH_ENV, DEFAULT_PATH) == 0) {
-                new_path = string_concat(GET_PATH_ENV, path_to_add);
+        if (strcmp(PATH_ENV, DEFAULT_PATH) == 0) {
+                new_path = string_concat(PATH_ENV, path_to_add);
         }
         else {
-                new_path = string_concat(GET_PATH_ENV, ":");
+                new_path = string_concat(PATH_ENV, ":");
                 new_path = string_concat(new_path, path_to_add);
         };
         change_path_env(new_path);
         free(new_path);
 };
 
+#define MAX_TOK_BUFF_SIZE 64 
+#define TOKEN_DELIM       " \t\n\r"
+
+char **tokenize(char *line, char *delim) {
+        int buffer_size = MAX_TOK_BUFF_SIZE, pos = 0;
+        char **tokens = malloc(buffer_size * sizeof(char *));
+        char *token; //, **tokens_backup;
+        token = strtok(line, delim);
+        while (token != NULL) {
+                tokens[pos] = token;
+                pos++;
+                /* if token exceed the max token buffer size, relloc */
+                if (pos >= buffer_size) {
+                        buffer_size += MAX_TOK_BUFF_SIZE;
+                        tokens = realloc(tokens, buffer_size * sizeof(char*));
+                        if (!tokens) {
+                                fprintf(stderr, "allocation error!!\n");
+                                exit(EXIT_FAILURE);
+                        };
+                };
+                token = strtok(NULL, delim);
+        };
+        tokens[pos] = NULL;
+        // printf("[%s] [%s] [%s]\n", tokens[0], tokens[1], tokens[2]);
+        return tokens;
+};
+
+
+
 void delete_path(char *path_to_delete) {
         if (path_to_delete == NULL){
                 fprintf(stderr, "error: need path to delete, not NULL path.\n");
                 return;
         };
-        tokenize(getenv("PATH"));
-
+        char *path_env  = PATH_ENV;
+        char **paths    = tokenize(path_env, ":");
+        char *new_path  = "";
+        for (char **p=paths; *p; ++p) {
+                if (strcmp(*p, path_to_delete) == 0) {
+                        continue;
+                };
+                if (strcmp(new_path, "") == 0) {
+                        new_path = string_concat(new_path, *p);
+                }
+                else {
+                        new_path = string_concat(new_path, ":");
+                        new_path = string_concat(new_path, *p);
+                };
+        };        
+        change_path_env(new_path);
+        if (strcmp(new_path, "") != 0) {
+                free(new_path);
+        };
 };
 
 int cmd_path(char **args) {
         if (args[1] == NULL) {
-                printf("%s\n", GET_PATH_ENV);
+                printf("%s\n", PATH_ENV);
         }
         else { // with arguments
                 if (strcmp(args[1], "-") == 0) {                        
@@ -134,7 +180,7 @@ int cmd_exit(char **args) { // exit program, return 0
     return 0;
 };
 
-#define MAX_BUFF_SIZE 1024;
+#define MAX_BUFF_SIZE 1024
 
 char *cmd_readline(void) {
      int buffer_size = MAX_BUFF_SIZE;
@@ -164,31 +210,7 @@ char *cmd_readline(void) {
      };
 };
 
-#define MAX_TOK_BUFF_SIZE 64 
-#define TOKEN_DELIM       " \t\n\r"
 
-char **tokenize(char *line) {
-        int buffer_size = MAX_TOK_BUFF_SIZE, pos = 0;
-        char **tokens = malloc(buffer_size * sizeof(char*));
-        char *token; //, **tokens_backup;
-        token = strtok(line, TOKEN_DELIM);
-        while (token != NULL) {
-                tokens[pos] = token;
-                pos++;
-                /* if token exceed the max token buffer size, relloc */
-                if (pos >= buffer_size) {
-                        buffer_size += MAX_TOK_BUFF_SIZE;
-                        tokens = realloc(tokens, buffer_size * sizeof(char*));
-                        if (!tokens) {
-                                fprintf(stderr, "allocation error!!\n");
-                                exit(EXIT_FAILURE);
-                        };
-                };
-                token = strtok(NULL, TOKEN_DELIM);
-        };
-        tokens[pos] = NULL;
-        return tokens;
-};
 
 int cmd_launch(char **args) {
         pid_t pid;
@@ -230,11 +252,11 @@ void cmd_loop(void) {
         char **args;
         int  status = 1;
         change_path_env(DEFAULT_PATH);
-        printf("PATH: %s\n", GET_PATH_ENV);
+        printf("PATH: %s\n", PATH_ENV);
         while(status) {
                 printf("$ ");
                 line   = cmd_readline();
-                args   = tokenize(line);
+                args   = tokenize(line, TOKEN_DELIM);
                 status = cmd_execute(args);
                 free(line);
                 free(args);
