@@ -74,7 +74,6 @@ int cmd_pwd(char **args) {
 };
 
 #define DEFAULT_PATH ""
-// #define ORIGIN_PATH  "ORIGIN_PATH"
 
 char *string_concat(char *str1, char *str2) {  
         int length = strlen(str1) + strlen(str2) + 1;  
@@ -90,18 +89,11 @@ void change_path_env(char *new_path) {
                 return;
         };
         if (strcmp(new_path, DEFAULT_PATH) == 0) {
-                setenv("PATH", "", 1);
+                /* change the PATH env to empty*/
+                setenv("PATH", "", 1); 
         }
         else {
-                
-                // strcpy(tmp, environ[15]);
-                // strcat(tmp, new_path);
-                // printf("tmp: %s\n", tmp);
-                // strcat(environ[15], new_path);
-                char *new_path_env = string_concat(environ[15], new_path);
-                environ[15] = new_path_env;
-                // printf("environ: %s\n", environ[15]);
-                // free(tmp);
+                setenv("PATH", new_path, 1);
         };
 };
 
@@ -112,25 +104,21 @@ void add_path(char *path_to_add) {
         };
         char *tmp = malloc(sizeof(char) * (strlen(path_to_add) +               \
                                            strlen(self_path))  + 1);
+        /*  */
         if (strcmp(self_path, DEFAULT_PATH) == 0) {
-                strcpy(tmp, path_to_add);
-                self_path = tmp;
+                // strcpy(tmp, path_to_add);
+                self_path = string_concat(self_path, path_to_add);
+
         }
         else {
-                // printf("here1\n");
-                // strcpy(tmp, self_path);
-                // printf("here2\n");
-
-                strcpy(tmp, ":");
-                // printf("here3\n");
-
-                strcat(tmp, path_to_add);
-                self_path = tmp;
+                
+                self_path = string_concat(self_path, ":");
+                self_path = string_concat(self_path, path_to_add);
         };
         // printf("tmp: %s\n", tmp);
         // printf("self_path: %s\n", self_path);;
         change_path_env(self_path);
-        printf("%s\n", getenv("PATH"));
+        // printf("%s\n", getenv("PATH"));
         free(tmp);
 };
 
