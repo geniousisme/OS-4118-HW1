@@ -30,6 +30,21 @@ int (*builtin_func[])(char **) = {
         &cmd_exit
 };
 
+// #define PATH_LENG 4
+
+// int path_env_idx(void) {
+//         int i = 0
+//         for (char **env=environ; *env; ++env, i++) {
+//                 char tmp[PATH_LENG];
+//                 strncpy(tmp, env, PATH_LENG);
+//                 if (strcmp(tmp, "PATH") == 0) {
+//                         return 
+//                 };
+//         };
+// };
+
+// int path_idx = 
+
 int builtin_str_leng(void) {
         return sizeof(builtin_str) / sizeof(char *);
 };
@@ -75,7 +90,7 @@ void change_path_env(char *new_path) {
                 return;
         };
         if (strcmp(new_path, DEFAULT_PATH) == 0) {
-                environ[15] = "PATH=";
+                setenv("PATH", "", 1);
         }
         else {
                 
@@ -246,6 +261,7 @@ void cmd_loop(void) {
         char **args;
         int  status = 1;
         change_path_env(DEFAULT_PATH);
+        printf("PATH: %s\n", getenv("PATH"));
         while(status) {
                 printf("$ ");
                 line   = cmd_readline();
