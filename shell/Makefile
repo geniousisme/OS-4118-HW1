@@ -5,7 +5,7 @@ LDFLAGS :=
 
 OBJECTS := shell.o
 
-chris: w4118_sh
+all: w4118_sh
 
 w4118_sh: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS)
