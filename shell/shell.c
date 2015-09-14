@@ -30,21 +30,6 @@ int (*builtin_func[])(char **) = {
         &cmd_exit
 };
 
-// #define PATH_LENG 4
-
-// int path_env_idx(void) {
-//         int i = 0
-//         for (char **env=environ; *env; ++env, i++) {
-//                 char tmp[PATH_LENG];
-//                 strncpy(tmp, env, PATH_LENG);
-//                 if (strcmp(tmp, "PATH") == 0) {
-//                         return 
-//                 };
-//         };
-// };
-
-// int path_idx = 
-
 int builtin_str_leng(void) {
         return sizeof(builtin_str) / sizeof(char *);
 };
@@ -74,6 +59,8 @@ int cmd_pwd(char **args) {
 };
 
 #define DEFAULT_PATH ""
+#define GET_PATH_ENV getenv("PATH")
+
 
 char *string_concat(char *str1, char *str2) {  
         int length = strlen(str1) + strlen(str2) + 1;  
@@ -102,24 +89,17 @@ void add_path(char *path_to_add) {
                 fprintf(stderr, "error: need path to add, not NULL path.\n");
                 return;
         };
-        char *tmp = malloc(sizeof(char) * (strlen(path_to_add) +               \
-                                           strlen(self_path))  + 1);
-        /*  */
-        if (strcmp(self_path, DEFAULT_PATH) == 0) {
-                // strcpy(tmp, path_to_add);
-                self_path = string_concat(self_path, path_to_add);
-
+        char *new_path;
+        /* change to get path env from getenv, but not self_path */
+        if (strcmp(GET_PATH_ENV, DEFAULT_PATH) == 0) {
+                new_path = string_concat(GET_PATH_ENV, path_to_add);
         }
         else {
-                
-                self_path = string_concat(self_path, ":");
-                self_path = string_concat(self_path, path_to_add);
+                new_path = string_concat(GET_PATH_ENV, ":");
+                new_path = string_concat(new_path, path_to_add);
         };
-        // printf("tmp: %s\n", tmp);
-        // printf("self_path: %s\n", self_path);;
-        change_path_env(self_path);
-        // printf("%s\n", getenv("PATH"));
-        free(tmp);
+        change_path_env(new_path);
+        free(new_path);
 };
 
 void delete_path(char *path_to_delete) {
@@ -127,11 +107,13 @@ void delete_path(char *path_to_delete) {
                 fprintf(stderr, "error: need path to delete, not NULL path.\n");
                 return;
         };
+        tokenize(getenv("PATH"));
+
 };
 
 int cmd_path(char **args) {
         if (args[1] == NULL) {
-                printf("%s\n", getenv("PATH"));
+                printf("%s\n", GET_PATH_ENV);
         }
         else { // with arguments
                 if (strcmp(args[1], "-") == 0) {                        
@@ -143,7 +125,6 @@ int cmd_path(char **args) {
         };
         return 1;
 };
-
 
 int cmd_history(char **args) {
     return 1;
@@ -186,7 +167,7 @@ char *cmd_readline(void) {
 #define MAX_TOK_BUFF_SIZE 64 
 #define TOKEN_DELIM       " \t\n\r"
 
-char **cmd_parse(char *line) {
+char **tokenize(char *line) {
         int buffer_size = MAX_TOK_BUFF_SIZE, pos = 0;
         char **tokens = malloc(buffer_size * sizeof(char*));
         char *token; //, **tokens_backup;
@@ -249,11 +230,11 @@ void cmd_loop(void) {
         char **args;
         int  status = 1;
         change_path_env(DEFAULT_PATH);
-        printf("PATH: %s\n", getenv("PATH"));
+        printf("PATH: %s\n", GET_PATH_ENV);
         while(status) {
                 printf("$ ");
                 line   = cmd_readline();
-                args   = cmd_parse(line);
+                args   = tokenize(line);
                 status = cmd_execute(args);
                 free(line);
                 free(args);
