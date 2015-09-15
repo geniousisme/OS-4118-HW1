@@ -133,7 +133,7 @@ void add_history(char *line, char *cmd) {
 char **tokenizer(char *line, char *delim) {
         int buffer_size = MAX_TOK_BUFF_SIZE, pos = 0;
         char **tokens   = malloc(buffer_size * sizeof(char *));
-        char *token; //, **tokens_backup;        
+        char *token;
         char *line_copy = malloc(sizeof(char) * (strlen(line) + 1));        
         strcpy(line_copy, line);
         token = strtok(line, delim);
