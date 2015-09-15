@@ -39,7 +39,7 @@ int builtin_str_leng(void) {
 
 int cmd_cd(char **args) {
         if (args[1] == NULL) {
-                fprintf(stderr, "error: come on, cmd needs direcoty to move\n");
+                fprintf(stderr, "error: cd cmd needs direcoty to move\n");
         }
         else if (chdir(args[1]) == -1) {
                 perror("error");
@@ -89,7 +89,7 @@ void change_path_env(char *new_path) {
 
 void add_path(char *path_to_add) {
         if (path_to_add == NULL){
-                fprintf(stderr, "error: need path to add, not NULL path.\n");
+                fprintf(stderr, "error: can't add NULL path.\n");
                 return;
         };
         char *new_path;
@@ -125,6 +125,7 @@ void store_line_in_history(char *line, char *cmd) {
                 };
                 history[i - 1] = NULL;
         };
+        free(line);
         return;
 };
 
@@ -158,7 +159,7 @@ char **tokenize(char *line, char *delim) {
 
 void delete_path(char *path_to_delete) {
         if (path_to_delete == NULL){
-                fprintf(stderr, "error: need path to delete, not NULL path.\n");
+                fprintf(stderr, "error: can't delete NULL path.\n");
                 return;
         };
         char *path_env  = PATH_ENV;
