@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+
 
 extern char **environ;
 
@@ -12,10 +14,10 @@ int cmd_path(char **args);
 int cmd_history(char **args);
 int cmd_exit(char **args);
 
-#define HISTORY_SIZE 3
+#define MAX_HIST_SIZE 3
 
 char *origin_path_env;
-char *history [HISTORY_SIZE + 1];
+char *history [MAX_HIST_SIZE + 1];
 
 char *builtin_str[] = {
         "cd",
@@ -118,14 +120,13 @@ void store_line_in_history(char *line, char *cmd) {
         };
         history[pos] = line;
         /* update the history list  */
-        if (pos >= HISTORY_SIZE) {
+        if (pos >= MAX_HIST_SIZE) {
                 int i;
-                for (i = 1; i < HISTORY_SIZE + 1; i++) {
+                for (i = 1; i < MAX_HIST_SIZE + 1; i++) {
                         history[i - 1] = history[i];
                 };
                 history[i - 1] = NULL;
         };
-        free(line);
         return;
 };
 
@@ -154,8 +155,6 @@ char **tokenize(char *line, char *delim) {
         store_line_in_history(tmpline, tokens[0]);
         return tokens;
 };
-
-
 
 void delete_path(char *path_to_delete) {
         if (path_to_delete == NULL){
@@ -199,6 +198,14 @@ int cmd_path(char **args) {
         return 1;
 };
 
+void init_history(void) {
+        int pos = 0;
+        for(; pos < MAX_HIST_SIZE; pos++) {
+                history[pos] = NULL;
+        };
+        // memset(history, NULL, MAX_HIST_SIZE);
+};
+
 int cmd_history(char **args) {
         int i = 0;
         if (args[1] == NULL) {
@@ -206,22 +213,29 @@ int cmd_history(char **args) {
                         printf("%d %s\n", i, history[i]);
                         i++;
                 };
+                return 1;
+        };        
+        if (strcmp(args[1], "-c") == 0) {
+                init_history();
         }
-        else {  /* need -c & offset */
-                printf("do it later\n");
+        else if (strtol(args[1], NULL, 10) != ERANGE) {
+                 int offset = strtol(args[1], NULL, 10);
+                 if (offset < MAX_HIST_SIZE) {
+                        printf("%d %s\n", offset, history[offset]);
+                 }
+                 else {
+                        fprintf(stderr, "error: offset out of range: %d\n", \
+                                                                MAX_HIST_SIZE);
+                 };
+        }
+        else {
+                fprintf(stderr, "error: invalid args or index for history.");
         };
         return 1;
 };
 
 int cmd_exit(char **args) { // exit program, return 0
         return 0;
-};
-
-void init_history(void) {
-        int pos = 0;
-        for(; pos < HISTORY_SIZE; pos++) {
-                history[pos] = NULL;
-        };
 };
 
 #define MAX_BUFF_SIZE 1024
