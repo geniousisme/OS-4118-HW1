@@ -110,7 +110,7 @@ void add_path(char *path_to_add) {
 #define MAX_TOK_BUFF_SIZE 64 
 #define TOKEN_DELIM       " \t\n\r"
 
-void store_line_in_history(char *line, char *cmd) {
+void add_history(char *line, char *cmd) {
         if (strcmp(cmd, "history") == 0) {
                 return;
         };
@@ -130,12 +130,12 @@ void store_line_in_history(char *line, char *cmd) {
         return;
 };
 
-char **tokenize(char *line, char *delim) {
+char **tokenizer(char *line, char *delim) {
         int buffer_size = MAX_TOK_BUFF_SIZE, pos = 0;
         char **tokens   = malloc(buffer_size * sizeof(char *));
-        char *token; //, **tokens_backup;
-        char *tmpline = malloc(sizeof(char) * (strlen(line) + 1));
-        strcpy(tmpline, line);
+        char *token; //, **tokens_backup;        
+        char *line_copy = malloc(sizeof(char) * (strlen(line) + 1));        
+        strcpy(line_copy, line);
         token = strtok(line, delim);
         while (token != NULL) {
                 tokens[pos] = token;
@@ -152,7 +152,9 @@ char **tokenize(char *line, char *delim) {
                 token = strtok(NULL, delim);
         };
         tokens[pos] = NULL;
-        store_line_in_history(tmpline, tokens[0]);
+        if (tokens[0] != NULL) {
+                add_history(line_copy, tokens[0]);
+        };
         return tokens;
 };
 
@@ -162,7 +164,7 @@ void delete_path(char *path_to_delete) {
                 return;
         };
         char *path_env  = PATH_ENV;
-        char **paths    = tokenize(path_env, ":");
+        char **paths    = tokenizer(path_env, ":");
         char *new_path  = "";
         char **p;
         for (p=paths; *p; ++p) {
@@ -218,23 +220,29 @@ int cmd_history(char **args) {
         if (strcmp(args[1], "-c") == 0) {
                 init_history();
         }
-        else if (strtol(args[1], NULL, 10) != ERANGE) {
-                 int offset = strtol(args[1], NULL, 10);
-                 if (offset < MAX_HIST_SIZE) {
-                        printf("%d %s\n", offset, history[offset]);
-                 }
-                 else {
-                        fprintf(stderr, "error: offset out of range: %d\n", \
-                                                                MAX_HIST_SIZE);
-                 };
-        }
-        else {
-                fprintf(stderr, "error: invalid args or index for history.");
+        else {  
+                /* set errno = 0 before you use strtol first. */
+                errno = 0;
+                int offset = strtol(args[1], NULL, 10);
+                if (errno != ERANGE && errno != EINVAL) {
+                        if (offset < MAX_HIST_SIZE) {
+                               printf("%d %s\n", offset, history[offset]);
+                        }
+                        else {
+                               fprintf(stderr, "error: offset out of range:"   \
+                                                      "%d \n", MAX_HIST_SIZE);
+                        };
+                }
+                else {
+                        fprintf(stderr, "error: invalid args or"               \
+                                                       " index for history.\n");
+                };
         };
+        
         return 1;
 };
 
-int cmd_exit(char **args) { // exit program, return 0
+int cmd_exit(char **args) { 
         return 0;
 };
 
@@ -312,7 +320,7 @@ void cmd_loop(void) {
         while(status) {
                 printf("$ ");
                 line   = cmd_readline();
-                args   = tokenize(line, TOKEN_DELIM);
+                args   = tokenizer(line, TOKEN_DELIM);
                 status = cmd_execute(args);
                 free(line);
                 free(args);
