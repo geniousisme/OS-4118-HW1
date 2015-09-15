@@ -12,7 +12,10 @@ int cmd_path(char **args);
 int cmd_history(char **args);
 int cmd_exit(char **args);
 
-char *origin_path_env, *self_path = "";
+#define HISTORY_SIZE 3
+
+char *origin_path_env;
+char *history [HISTORY_SIZE + 1];
 
 char *builtin_str[] = {
         "cd",
@@ -105,10 +108,32 @@ void add_path(char *path_to_add) {
 #define MAX_TOK_BUFF_SIZE 64 
 #define TOKEN_DELIM       " \t\n\r"
 
+void store_line_in_history(char *line, char *cmd) {
+        if (strcmp(cmd, "history") == 0) {
+                return;
+        };
+        int pos = 0;
+        while(history[pos] != NULL) {
+                pos++;
+        };
+        history[pos] = line;
+        /* update the history list  */
+        if (pos >= HISTORY_SIZE) {
+                int i;
+                for (i = 1; i < HISTORY_SIZE + 1; i++) {
+                        history[i - 1] = history[i];
+                };
+                history[i - 1] = NULL;
+        };
+        return;
+};
+
 char **tokenize(char *line, char *delim) {
         int buffer_size = MAX_TOK_BUFF_SIZE, pos = 0;
-        char **tokens = malloc(buffer_size * sizeof(char *));
+        char **tokens   = malloc(buffer_size * sizeof(char *));
         char *token; //, **tokens_backup;
+        char *tmpline = malloc(sizeof(char) * (strlen(line) + 1));
+        strcpy(tmpline, line);
         token = strtok(line, delim);
         while (token != NULL) {
                 tokens[pos] = token;
@@ -125,7 +150,7 @@ char **tokenize(char *line, char *delim) {
                 token = strtok(NULL, delim);
         };
         tokens[pos] = NULL;
-        // printf("[%s] [%s] [%s]\n", tokens[0], tokens[1], tokens[2]);
+        store_line_in_history(tmpline, tokens[0]);
         return tokens;
 };
 
@@ -139,7 +164,8 @@ void delete_path(char *path_to_delete) {
         char *path_env  = PATH_ENV;
         char **paths    = tokenize(path_env, ":");
         char *new_path  = "";
-        for (char **p=paths; *p; ++p) {
+        char **p;
+        for (p=paths; *p; ++p) {
                 if (strcmp(*p, path_to_delete) == 0) {
                         continue;
                 };
@@ -173,44 +199,59 @@ int cmd_path(char **args) {
 };
 
 int cmd_history(char **args) {
-    return 1;
+        int i = 0;
+        if (args[1] == NULL) {
+                while(history[i] != NULL) {
+                        printf("%d %s\n", i, history[i]);
+                        i++;
+                };
+        }
+        else {  /* need -c & offset */
+                printf("do it later\n");
+        };
+        return 1;
 };
 
 int cmd_exit(char **args) { // exit program, return 0
-    return 0;
+        return 0;
+};
+
+void init_history(void) {
+        int pos = 0;
+        for(; pos < HISTORY_SIZE; pos++) {
+                history[pos] = NULL;
+        };
 };
 
 #define MAX_BUFF_SIZE 1024
 
 char *cmd_readline(void) {
-     int buffer_size = MAX_BUFF_SIZE;
-     int pos         = 0;
-     char* buffer    = malloc(buffer_size * sizeof(char));
-     char c;
-     while(1) {
-           c = getchar();
-           if (c == EOF || c == '\n') {
-               buffer[pos] = '\0';
-               // printf("test read line: %s \n", buffer);
-               return buffer;
-           }
-           else {
-               buffer[pos] = c;
-           };
-           pos++;
-           // if exceed the max buffer size, realloc
-           if (pos >= buffer_size) {
-               buffer_size += MAX_BUFF_SIZE;
-               buffer = realloc(buffer, buffer_size);
-               if (!buffer) {
-                   fprintf(stderr, "allocation error!!\n");
-                   exit(EXIT_FAILURE);
-               };
-           };
-     };
+        int buffer_size = MAX_BUFF_SIZE;
+        int pos         = 0;
+        char* buffer    = malloc(buffer_size * sizeof(char));
+        char c;
+        while(1) {
+                c = getchar();
+                if (c == EOF || c == '\n') {
+                        buffer[pos] = '\0';
+                        return buffer;
+                }
+                else {
+                        buffer[pos] = c;
+                };
+                pos++;
+                /* if exceed the max buffer size, realloc */
+                /* TODO: need to make following functionize */
+                if (pos >= buffer_size) {
+                        buffer_size += MAX_BUFF_SIZE;
+                        buffer = realloc(buffer, buffer_size);
+                        if (!buffer) {
+                                fprintf(stderr, "allocation error!!\n");
+                                exit(EXIT_FAILURE);
+                        };
+                };
+        };
 };
-
-
 
 int cmd_launch(char **args) {
         pid_t pid;
@@ -252,7 +293,7 @@ void cmd_loop(void) {
         char **args;
         int  status = 1;
         change_path_env(DEFAULT_PATH);
-        printf("PATH: %s\n", PATH_ENV);
+        init_history();
         while(status) {
                 printf("$ ");
                 line   = cmd_readline();
