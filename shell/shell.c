@@ -110,15 +110,23 @@ void add_path(char *path_to_add) {
 #define MAX_TOK_BUFF_SIZE 64 
 #define TOKEN_DELIM       " \t\n\r"
 
-void add_history(char *line, char *cmd) {
+void add_history(char *line) {
+        char *line_copy = malloc(sizeof(char) * (strlen(line) + 1));        
+        char *cmd       = malloc(sizeof(char) * (strlen(line) + 1));        
+
+        strcpy(line_copy, line);
+        strcpy(cmd, line);
+        // int loc = strstr();
+        cmd = strtok(cmd, TOKEN_DELIM);
         if (strcmp(cmd, "history") == 0) {
+                free(cmd);
                 return;
         };
         int pos = 0;
         while(history[pos] != NULL) {
                 pos++;
         };
-        history[pos] = line;
+        history[pos] = line_copy;
         /* update the history list  */
         if (pos >= MAX_HIST_SIZE) {
                 int i;
@@ -127,6 +135,7 @@ void add_history(char *line, char *cmd) {
                 };
                 history[i - 1] = NULL;
         };
+        free(cmd);
         return;
 };
 
@@ -134,8 +143,6 @@ char **tokenizer(char *line, char *delim) {
         int buffer_size = MAX_TOK_BUFF_SIZE, pos = 0;
         char **tokens   = malloc(buffer_size * sizeof(char *));
         char *token;
-        char *line_copy = malloc(sizeof(char) * (strlen(line) + 1));        
-        strcpy(line_copy, line);
         token = strtok(line, delim);
         while (token != NULL) {
                 tokens[pos] = token;
@@ -152,9 +159,6 @@ char **tokenizer(char *line, char *delim) {
                 token = strtok(NULL, delim);
         };
         tokens[pos] = NULL;
-        if (tokens[0] != NULL) {
-                add_history(line_copy, tokens[0]);
-        };
         return tokens;
 };
 
@@ -257,6 +261,7 @@ char *cmd_readline(void) {
                 c = getchar();
                 if (c == EOF || c == '\n') {
                         buffer[pos] = '\0';
+                        add_history(buffer);
                         return buffer;
                 }
                 else {
