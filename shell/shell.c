@@ -14,7 +14,7 @@ int cmd_path(char **args);
 int cmd_history(char **args);
 int cmd_exit(char **args);
 
-#define MAX_HIST_SIZE 3
+#define MAX_HIST_SIZE 100
 
 char *origin_path_env;
 char *history [MAX_HIST_SIZE + 1];
@@ -112,13 +112,11 @@ void add_path(char *path_to_add) {
 
 void add_history(char *line) {
         char *line_copy = malloc(sizeof(char) * (strlen(line) + 1));        
-        char *cmd       = malloc(sizeof(char) * (strlen(line) + 1));        
-
+        char *cmd       = malloc(sizeof(char) * (strlen(line) + 1));  
         strcpy(line_copy, line);
         strcpy(cmd, line);
-        // int loc = strstr();
         cmd = strtok(cmd, TOKEN_DELIM);
-        if (strcmp(cmd, "history") == 0) {
+        if (cmd == NULL || strcmp(cmd, "history") == 0) {
                 free(cmd);
                 return;
         };
@@ -127,6 +125,7 @@ void add_history(char *line) {
                 pos++;
         };
         history[pos] = line_copy;
+        
         /* update the history list  */
         if (pos >= MAX_HIST_SIZE) {
                 int i;
@@ -136,6 +135,7 @@ void add_history(char *line) {
                 history[i - 1] = NULL;
         };
         free(cmd);
+        // free(line_copy);
         return;
 };
 
@@ -229,11 +229,12 @@ int cmd_history(char **args) {
                 errno = 0;
                 int offset = strtol(args[1], NULL, 10);
                 if (errno != ERANGE && errno != EINVAL) {
-                        if (offset < MAX_HIST_SIZE) {
+                        if (offset < MAX_HIST_SIZE && history[offset] != NULL) {
                                printf("%d %s\n", offset, history[offset]);
                         }
                         else {
-                               fprintf(stderr, "error: offset out of range:"   \
+                               fprintf(stderr, "error: no history "            \
+                                                      "or offset out of range:"\
                                                       "%d \n", MAX_HIST_SIZE);
                         };
                 }
