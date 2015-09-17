@@ -89,23 +89,7 @@ void change_path_env(char *new_path) {
         };
 };
 
-void add_path(char *path_to_add) {
-        if (path_to_add == NULL){
-                fprintf(stderr, "error: can't add NULL path.\n");
-                return;
-        };
-        char *new_path;
-        /* change to get path env from getenv, but not self_path */
-        if (strcmp(PATH_ENV, DEFAULT_PATH) == 0) {
-                new_path = string_concat(PATH_ENV, path_to_add);
-        }
-        else {
-                new_path = string_concat(PATH_ENV, ":");
-                new_path = string_concat(new_path, path_to_add);
-        };
-        change_path_env(new_path);
-        free(new_path);
-};
+
 
 #define MAX_TOK_BUFF_SIZE 64 
 #define TOKEN_DELIM       " \t\n\r"
@@ -162,13 +146,49 @@ char **tokenizer(char *line, char *delim) {
         return tokens;
 };
 
+#define PATH_DELIM ":"
+
+void add_path(char *path_to_add) {
+        char **curr_paths = malloc(sizeof(char *) * strlen(PATH_ENV));
+        char *path_env    = malloc(sizeof(char) * strlen(PATH_ENV));
+        if (path_to_add == NULL){
+                fprintf(stderr, "error: can't add NULL path.\n");
+                return;
+        };
+        char *new_path;
+        /* change to get path env from getenv, but not self_path */
+        if (strcmp(PATH_ENV, DEFAULT_PATH) == 0) {
+                new_path = string_concat(PATH_ENV, path_to_add);
+        }
+        else {
+                strcpy(path_env, PATH_ENV);
+                curr_paths = tokenizer(path_env, PATH_DELIM);
+                char **path;
+                for (path = curr_paths; *path; ++path) {
+                    if (strcmp(*path, path_to_add) == 0) {
+                        fprintf(stderr, "error: test, path reapted, bitch.\n");
+                        free(path_env);
+                        free(curr_paths);
+                        return;
+                    };
+                };
+                new_path = string_concat(PATH_ENV, PATH_DELIM);
+                new_path = string_concat(new_path, path_to_add);
+        };
+        change_path_env(new_path);
+        free(new_path);
+        free(path_env);
+        free(curr_paths);
+
+};
+
 void delete_path(char *path_to_delete) {
         if (path_to_delete == NULL){
                 fprintf(stderr, "error: can't delete NULL path.\n");
                 return;
         };
         char *path_env  = PATH_ENV;
-        char **paths    = tokenizer(path_env, ":");
+        char **paths    = tokenizer(path_env, PATH_DELIM);
         char *new_path  = "";
         char **p;
         for (p=paths; *p; ++p) {
@@ -179,7 +199,7 @@ void delete_path(char *path_to_delete) {
                         new_path = string_concat(new_path, *p);
                 }
                 else {
-                        new_path = string_concat(new_path, ":");
+                        new_path = string_concat(new_path, PATH_DELIM);
                         new_path = string_concat(new_path, *p);
                 };
         };        
