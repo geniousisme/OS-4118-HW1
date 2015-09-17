@@ -5,9 +5,6 @@
 #include <string.h>
 #include <errno.h>
 
-
-extern char **environ;
-
 int cmd_cd(char **args);
 int cmd_pwd(char **args);
 int cmd_path(char **args);
