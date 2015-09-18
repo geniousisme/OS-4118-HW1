@@ -342,7 +342,7 @@ void cmd_loop(void)
 	change_path_env(DEFAULT_PATH);
 	init_history();
 	while (status) {
-		printf("$ ");
+		printf("$");
 		line   = cmd_readline();
 		args   = tokenizer(line, TOKEN_DELIM);
 		status = cmd_execute(args);
