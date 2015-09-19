@@ -270,13 +270,8 @@ int cmd_history(char **args)
 };
 
 int cmd_exit(char **args)
-<<<<<<< HEAD
-{
-	free_history();
-=======
 {   
     free_history();
->>>>>>> b4fc02c62d84677069297e8b76995b74ac64844b
     return 0;
 };
 
