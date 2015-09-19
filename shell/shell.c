@@ -312,14 +312,16 @@ int cmd_launch(char **args)
 
 	pid = fork();
 	if (pid == 0) {
-		if (execvp(args[0], args) ==  -1)
+		if (execvp(args[0], args) ==  -1) {
+            free(args);
 			perror("error");
+        };
 		exit(EXIT_FAILURE);
 	} else if (pid > 0) {
 		do {
 			waitpid(pid, &status, WUNTRACED);
 		} while (!(WIFEXITED(status) || WIFSIGNALED(status)));
-	} else
+	} else 
 		perror("error");
 	return 1;
 };
@@ -345,8 +347,8 @@ void cmd_loop(void)
 	char **args;
 	int  status = 1;
 
-	change_path_env(DEFAULT_PATH);
-	init_history();
+	// change_path_env(DEFAULT_PATH);
+	// init_history();
 	while (status) {
 		printf("$");
 		line   = cmd_readline();
