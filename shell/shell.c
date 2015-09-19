@@ -86,27 +86,26 @@ void add_history(char *line)
 	strcpy(cmd, line);
 	cmd = strtok(cmd, TOKEN_DELIM);
 	if (cmd == NULL || strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
-        printf("free mem!!\n");
 		free(cmd);
         free(line_copy);
 		return;
 	};
 
-	int pos = 0;
+	// int pos = 0;
 
-	while (history[pos] != NULL)
-		pos++;
+	// while (history[pos] != NULL)
+	// 	pos++;
 
-	history[pos] = line_copy;
+	// history[pos] = line_copy;
 
-	/* update the history list  */
-	if (pos >= MAX_HIST_SIZE) {
-		int i;
+	// /* update the history list  */
+	// if (pos >= MAX_HIST_SIZE) {
+	// 	int i;
 
-		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
-			history[i - 1] = history[i];
-		history[i - 1] = NULL;
-	};
+	// 	for (i = 1; i < MAX_HIST_SIZE + 1; i++)
+	// 		history[i - 1] = history[i];
+	// 	history[i - 1] = NULL;
+	// };
 
 	free(cmd);
 	return;
