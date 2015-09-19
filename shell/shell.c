@@ -287,7 +287,7 @@ char *cmd_readline(void)
 			buffer[pos] = c;
 		} else {
 			buffer[pos] = '\0';
-			// add_history(buffer);
+			add_history(buffer);
 			return buffer;
 		};
 		pos++;
