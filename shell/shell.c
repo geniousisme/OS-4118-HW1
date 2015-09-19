@@ -21,7 +21,7 @@ int (*builtin_func[])(char **) = {
 	&cmd_cd,
 	&cmd_pwd,
 	&cmd_path,
-	// &cmd_history,
+	&cmd_history,
 	&cmd_exit
 };
 
