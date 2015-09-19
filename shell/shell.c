@@ -129,12 +129,13 @@ char **tokenizer(char *line, char *delim)
 	while (token != NULL) {
 		tokens[pos] = token;
 		pos++;
-		/* if token exceed the max token buffer size, relloc */
+		/* if token exceed the max token buffer size, realloc */
 		if (pos >= buffer_size) {
 			buffer_size += MAX_TOK_BUFF_SIZE;
 			tokens = realloc(tokens, buffer_size * sizeof(char *));
 			if (!tokens) {
 				fprintf(stderr, "allocation error!!\n");
+                free(tokens);
 				exit(EXIT_FAILURE);
 			};
 		};
@@ -221,12 +222,22 @@ int cmd_path(char **args)
 	};
 	return 1;
 };
+void free_history(void) {
+    int pos = 0;
+
+    while (history[pos] != NULL) {
+        free(history[pos]);
+        pos++;
+    }; 
+};
+
 
 void init_history(void)
-{
-	int pos = 0;
+{	
+    int pos = 0;
 
-	for ( ; pos < MAX_HIST_SIZE; pos++) {
+    free_history();
+    for ( ; pos < MAX_HIST_SIZE; pos++) {
 		history[pos] = NULL;
 	};
 };
@@ -266,7 +277,8 @@ int cmd_history(char **args)
 
 int cmd_exit(char **args)
 {
-	return 0;
+	free_history();
+    return 0;
 };
 
 char *cmd_readline(void)
@@ -293,6 +305,7 @@ char *cmd_readline(void)
 			buffer = realloc(buffer, buffer_size);
 			if (!buffer) {
 				fprintf(stderr, "allocation error!!\n");
+                free(buffer);
 				exit(EXIT_FAILURE);
 			};
 		};
@@ -342,6 +355,7 @@ void cmd_loop(void)
 	change_path_env(DEFAULT_PATH);
 	init_history();
 	while (status) {
+        break;
 		printf("$");
 		line   = cmd_readline();
 		args   = tokenizer(line, TOKEN_DELIM);
@@ -349,6 +363,9 @@ void cmd_loop(void)
 		free(line);
 		free(args);
 	};
+    free(history);
+    free(origin_path_env);
+
 };
 
 int main(int argc, char **argv)
