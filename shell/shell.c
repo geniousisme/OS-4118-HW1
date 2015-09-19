@@ -346,7 +346,7 @@ void cmd_loop(void)
 	int  status = 1;
 
 	change_path_env(DEFAULT_PATH);
-	// init_history();
+	init_history();
 	while (status) {
 		printf("$");
 		line   = cmd_readline();
@@ -359,9 +359,6 @@ void cmd_loop(void)
 
 int main(int argc, char **argv)
 {
-	// cmd_loop();
-	// return EXIT_SUCCESS;
-    printf("test\n");
-    return 0;
-
+	cmd_loop();
+	return EXIT_SUCCESS;
 };
