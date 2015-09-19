@@ -269,8 +269,8 @@ int cmd_history(char **args)
 };
 
 int cmd_exit(char **args)
-{
-	// free_history();
+{   
+    free_history();
     return 0;
 };
 
@@ -347,8 +347,8 @@ void cmd_loop(void)
 	char **args;
 	int  status = 1;
 
-	// change_path_env(DEFAULT_PATH);
-	// init_history();
+	change_path_env(DEFAULT_PATH);
+	init_history();
 	while (status) {
 		printf("$");
 		line   = cmd_readline();
