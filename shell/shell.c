@@ -79,17 +79,17 @@ void change_path_env(char *new_path)
 
 void add_history(char *line)
 {
-	char *line_copy = malloc(sizeof(char) * (strlen(line) + 1));
-	char *cmd       = malloc(sizeof(char) * (strlen(line) + 1));
+	// char *line_copy = malloc(sizeof(char) * (strlen(line) + 1));
+	// char *cmd       = malloc(sizeof(char) * (strlen(line) + 1));
 
-	strcpy(line_copy, line);
-	strcpy(cmd, line);
-	cmd = strtok(cmd, TOKEN_DELIM);
-	if (cmd == NULL || strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
-		free(cmd);
-        free(line_copy);
-		return;
-	};
+	// strcpy(line_copy, line);
+	// strcpy(cmd, line);
+	// cmd = strtok(cmd, TOKEN_DELIM);
+	// if (cmd == NULL || strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
+	// 	free(cmd);
+ //        free(line_copy);
+	// 	return;
+	// };
 
 	// int pos = 0;
 
@@ -106,8 +106,8 @@ void add_history(char *line)
 	// 		history[i - 1] = history[i];
 	// 	history[i - 1] = NULL;
 	// };
-
-	free(cmd);
+    // free(line_copy);
+	// free(cmd);
 	return;
 };
 
