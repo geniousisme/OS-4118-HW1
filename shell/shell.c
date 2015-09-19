@@ -85,7 +85,8 @@ void add_history(char *line)
 	strcpy(line_copy, line);
 	strcpy(cmd, line);
 	cmd = strtok(cmd, TOKEN_DELIM);
-	if (cmd == NULL || strcmp(cmd, "history") == 0) {
+	if (cmd == NULL || strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
+        printf("free mem!!\n");
 		free(cmd);
         free(line_copy);
 		return;
@@ -259,7 +260,7 @@ int cmd_history(char **args)
 				printf("%d %s\n", offset, history[offset]);
 			else {
 				fprintf(stderr,
-				"error: no history or offset out of range");
+				"error: no history or offset out of range\n");
 			};
 		} else {
 			fprintf(stderr,
