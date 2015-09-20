@@ -220,11 +220,14 @@ int cmd_path(char **args)
 
 void free_history(void) {
     int pos = 0;
-
-    while (history[pos] != NULL) {
-        free(history[pos]);
-        pos++;
-    }; 
+    for (pos = 0; pos < MAX_HIST_SIZE + 1; pos++) {
+        if (history[pos] != NULL)
+            free(history[pos]);
+    };
+    // while (history[pos] != NULL) {
+    //     free(history[pos]);
+    //     pos++;
+    // }; 
 };
 
 
@@ -362,6 +365,7 @@ void cmd_loop(void)
 		free(line);
 		free(args);
 	};
+
 };
 
 int main(int argc, char **argv)
