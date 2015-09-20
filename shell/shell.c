@@ -168,7 +168,6 @@ void add_path(char *path_to_add)
 				return;
 			};
 		};
-
 		// new_path = string_concat(PATH_ENV, PATH_DELIM);
 		// new_path = string_concat(new_path, path_to_add);
 		tmp_path = string_concat(PATH_ENV, PATH_DELIM);
@@ -188,24 +187,37 @@ void delete_path(char *path_to_delete)
 	if (path_to_delete == NULL)
 		fprintf(stderr, "error: can't delete NULL path.\n");
 	else {
-		char *path_env  = PATH_ENV;
+		char *path_env  = malloc(sizeof(char) * strlen(PATH_ENV));
+		
+		strcpy(path_env, PATH_ENV);
+		
 		char **paths    = tokenizer(path_env, PATH_DELIM);
-		char *new_path  = "";
+		// char *new_path  = "" ;//,*tmp_path = "";
 		char **p;
-
-		for (p = paths; *p; ++p) {
+		change_path_env(DEFAULT_PATH);
+		/*for (p = paths; *p; ++p) {
 			if (strcmp(*p, path_to_delete) == 0)
 				continue;
 			if (strcmp(new_path, "") == 0)
 				new_path = string_concat(new_path, *p);
 			else {
-				new_path = string_concat(new_path, PATH_DELIM);
-				new_path = string_concat(new_path, *p);
+				// new_path = string_concat(new_path, PATH_DELIM);
+				// new_path = string_concat(new_path, *p);
+				tmp_path = string_concat(tmp_path, PATH_DELIM);
+				new_path = string_concat(tmp_path, *p);
+			};
+		};*/
+		for (p = paths; *p; ++p) {
+			if (strcmp(*p, path_to_delete) == 0)
+				continue;
+			else {
+				add_path(*p);
 			};
 		};
-		change_path_env(new_path);
-		if (strcmp(new_path, "") != 0)
-			free(new_path);
+		free(paths);
+		free(path_env);
+		// if (strcmp(new_path, "") != 0)
+		// 	free(new_path);
 	};
 	return;
 };
