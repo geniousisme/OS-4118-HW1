@@ -148,7 +148,7 @@ void add_path(char *path_to_add)
 		fprintf(stderr, "error: can't add NULL path.\n");
 		return;
 	};
-	char *new_path;
+	char *new_path, *tmp_path = NULL;
 	/* change to get path env from getenv, but not self_path */
 	if (strcmp(PATH_ENV, DEFAULT_PATH) == 0)
 		new_path = string_concat(PATH_ENV, path_to_add);
@@ -166,11 +166,15 @@ void add_path(char *path_to_add)
 			};
 		};
 
-		new_path = string_concat(PATH_ENV, PATH_DELIM);
-		new_path = string_concat(new_path, path_to_add);
+		// new_path = string_concat(PATH_ENV, PATH_DELIM);
+		// new_path = string_concat(new_path, path_to_add);
+		tmp_path = string_concat(PATH_ENV, PATH_DELIM);
+		new_path = string_concat(tmp_path, path_to_add);
 	};
 
 	change_path_env(new_path);
+	if (tmp_path != NULL)
+		free(tmp_path);
 	free(new_path);
 	free(path_env);
 	free(curr_paths);
