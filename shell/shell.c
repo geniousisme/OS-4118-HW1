@@ -366,7 +366,7 @@ void cmd_loop(void)
 		free(line);
 		free(args);
 	};
-
+    free_history();
 };
 
 int main(int argc, char **argv)
