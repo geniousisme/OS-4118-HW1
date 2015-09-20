@@ -106,7 +106,7 @@ void add_history(char *line)
 			history[i - 1] = history[i];
 		history[i - 1] = NULL;
 	};
-    free(line_copy);
+    // free(line_copy);
 	free(cmd);
 	return;
 };
