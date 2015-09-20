@@ -101,8 +101,8 @@ void add_history(char *line)
 
 	/* update the history list  */
 	if (pos >= MAX_HIST_SIZE) {
-		int i;
-
+		int i = 0;
+        free(history[i]);
 		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
 			history[i - 1] = history[i];
 		history[i - 1] = NULL;
@@ -278,7 +278,8 @@ int cmd_history(char **args)
 
 int cmd_exit(char **args)
 {   
-    free_history();
+    // free_history();
+    
     return 0;
 };
 
