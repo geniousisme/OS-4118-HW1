@@ -102,8 +102,9 @@ void add_history(char *line)
 	/* update the history list  */
 	if (pos >= MAX_HIST_SIZE) {
 		int i = 0;
-        free(history[i]);
+        // free(history[i]);
 		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
+            free(history[i - 1]);
 			history[i - 1] = history[i];
 		history[i - 1] = NULL;
 	};
@@ -220,7 +221,7 @@ int cmd_path(char **args)
 };
 
 void free_history(void) {
-    int pos = 0;
+    int pos;
     for (pos = 0; pos < MAX_HIST_SIZE + 1; pos++) {
         if (history[pos] != NULL)
             free(history[pos]);
@@ -237,7 +238,7 @@ void init_history(void)
     int pos = 0;
 
     free_history();
-    for ( ; pos < MAX_HIST_SIZE; pos++) {
+    for ( ; pos < MAX_HIST_SIZE + 1; pos++) {
 		history[pos] = NULL;
 	};
 };
@@ -279,7 +280,7 @@ int cmd_history(char **args)
 int cmd_exit(char **args)
 {   
     // free_history();
-    
+
     return 0;
 };
 
