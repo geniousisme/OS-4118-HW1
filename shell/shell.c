@@ -9,6 +9,7 @@
 char *history[MAX_HIST_SIZE + 1];
 
 
+
 char *builtin_str[] = {
 	"cd",
 	"pwd",
@@ -104,7 +105,6 @@ void add_history(char *line)
 
 		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
 			history[i - 1] = history[i];
-        free(history[i - 1]);
 		history[i - 1] = NULL;
 	};
 	free(cmd);
