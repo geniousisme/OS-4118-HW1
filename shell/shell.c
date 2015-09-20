@@ -8,8 +8,6 @@
 
 char *history[MAX_HIST_SIZE + 1];
 
-
-
 char *builtin_str[] = {
 	"cd",
 	"pwd",
@@ -87,8 +85,8 @@ void add_history(char *line)
 	strcpy(cmd, line);
 	cmd = strtok(cmd, TOKEN_DELIM);
 	if (strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
-        free(cmd);
-        free(line_copy);
+		free(cmd);
+		free(line_copy);
 		return;
 	};
 
@@ -102,7 +100,8 @@ void add_history(char *line)
 	/* update the history list  */
 	if (pos >= MAX_HIST_SIZE) {
 		int i = 0;
-        free(history[i]);
+
+		free(history[i]);
 		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
 			history[i - 1] = history[i];
 		history[i - 1] = NULL;
@@ -128,8 +127,8 @@ char **tokenizer(char *line, char *delim)
 			tokens = realloc(tokens, buffer_size * sizeof(char *));
 			if (!tokens) {
 				fprintf(stderr, "allocation error!!\n");
-                free(tokens);
-                free(line);
+				free(tokens);
+				free(line);
 				exit(EXIT_FAILURE);
 			};
 		};
@@ -213,27 +212,29 @@ int cmd_path(char **args)
 			delete_path(args[2]);
 		else if (strcmp(args[1], "+") == 0)
 			add_path(args[2]);
-        else
-            fprintf(stderr, "error: wrong params for path cmd.\n");
+		else
+			fprintf(stderr, "error: wrong params for path cmd.\n");
 	};
 	return 1;
 };
 
-void free_history(void) {
-    int pos;
-    for (pos = 0; pos < MAX_HIST_SIZE + 1; pos++) {
-        if (history[pos] != NULL)
-            free(history[pos]);
-    };
+void free_history(void)
+{
+	int pos;
+
+	for (pos = 0; pos < MAX_HIST_SIZE + 1; pos++) {
+		if (history[pos] != NULL)
+			free(history[pos]);
+	};
 };
 
 
 void init_history(void)
-{	
-    int pos = 0;
+{
+	int pos = 0;
 
-    free_history();
-    for ( ; pos < MAX_HIST_SIZE + 1; pos++) {
+	free_history();
+	for ( ; pos < MAX_HIST_SIZE + 1; pos++) {
 		history[pos] = NULL;
 	};
 };
@@ -259,7 +260,7 @@ int cmd_history(char **args)
 		if (errno != ERANGE && errno != EINVAL) {
 			if (offset < MAX_HIST_SIZE && history[offset] != NULL) {
 				printf("%d %s\n", offset, history[offset]);
-                add_history(history[offset]);
+				add_history(history[offset]);
 			} else {
 				fprintf(stderr,
 				"error: no history or offset out of range\n");
@@ -273,18 +274,19 @@ int cmd_history(char **args)
 };
 
 int cmd_exit(char **args)
-{   
-    return 0;
+{
+	return 0;
 };
 
-int isAllSpaces(char *buffer) 
+int isAllSpaces(char *buffer)
 {
-    int i;
-    for (i = 0; i < strlen(buffer); i++) {
-        if (buffer[i] != ' ')
-            return 0;
-    };
-    return 1;
+	int i;
+
+	for (i = 0; i < strlen(buffer); i++) {
+		if (buffer[i] != ' ')
+			return 0;
+	};
+	return 1;
 };
 
 char *cmd_readline(void)
@@ -300,8 +302,8 @@ char *cmd_readline(void)
 			buffer[pos] = c;
 		} else {
 			buffer[pos] = '\0';
-            if (!isAllSpaces(buffer))
-                add_history(buffer);
+			if (!isAllSpaces(buffer))
+				add_history(buffer);
 			return buffer;
 		};
 		pos++;
@@ -312,7 +314,7 @@ char *cmd_readline(void)
 			buffer = realloc(buffer, buffer_size);
 			if (!buffer) {
 				fprintf(stderr, "allocation error!!\n");
-                free(buffer);
+				free(buffer);
 				exit(EXIT_FAILURE);
 			};
 		};
@@ -327,20 +329,20 @@ int cmd_launch(char **args, char *line)
 	pid = fork();
 	if (pid == 0) {
 		if (execvp(args[0], args) ==  -1) {
-            free(args);
-            free(line);
+			free(args);
+			free(line);
 			perror("error");
-        };
+		};
 		exit(EXIT_FAILURE);
 	} else if (pid > 0) {
 		do {
 			waitpid(pid, &status, WUNTRACED);
 		} while (!(WIFEXITED(status) || WIFSIGNALED(status)));
 	} else {
-        free(args);
-        free(line);
+		free(args);
+		free(line);
 		perror("error");
-    };
+	};
 	return 1;
 };
 
@@ -373,9 +375,9 @@ void cmd_loop(void)
 		args   = tokenizer(line, TOKEN_DELIM);
 		status = cmd_execute(args, line);
 		free(line);
-        free(args);		
+		free(args);
 	};
-    free_history();
+	free_history();
 };
 
 int main(int argc, char **argv)
