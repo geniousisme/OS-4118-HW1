@@ -104,9 +104,9 @@ void add_history(char *line)
 
 		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
 			history[i - 1] = history[i];
+        free(history[i - 1]);
 		history[i - 1] = NULL;
 	};
-    // free(line_copy);
 	free(cmd);
 	return;
 };
@@ -212,6 +212,8 @@ int cmd_path(char **args)
 			delete_path(args[2]);
 		else if (strcmp(args[1], "+") == 0)
 			add_path(args[2]);
+        else
+            fprintf(stderr, "error: wrong params for path cmd.\n");
 	};
 	return 1;
 };
@@ -255,9 +257,10 @@ int cmd_history(char **args)
 		int offset = strtol(args[1], NULL, 10);
 
 		if (errno != ERANGE && errno != EINVAL) {
-			if (offset < MAX_HIST_SIZE && history[offset] != NULL)
+			if (offset < MAX_HIST_SIZE && history[offset] != NULL) {
 				printf("%d %s\n", offset, history[offset]);
-			else {
+                add_history(history[offset]);
+			} else {
 				fprintf(stderr,
 				"error: no history or offset out of range\n");
 			};
@@ -306,7 +309,7 @@ char *cmd_readline(void)
 	};
 };
 
-int cmd_launch(char **args)
+int cmd_launch(char **args, char *line)
 {
 	pid_t pid;
 	int status;
@@ -315,6 +318,7 @@ int cmd_launch(char **args)
 	if (pid == 0) {
 		if (execvp(args[0], args) ==  -1) {
             free(args);
+            free(line);
 			perror("error");
         };
 		exit(EXIT_FAILURE);
@@ -327,7 +331,7 @@ int cmd_launch(char **args)
 	return 1;
 };
 
-int cmd_execute(char **args)
+int cmd_execute(char **args, char *line)
 {
 	int i;
 
@@ -339,7 +343,7 @@ int cmd_execute(char **args)
 		if (strcmp(args[0], builtin_str[i]) == 0)
 			return (*builtin_func[i])(args);
 	};
-	return cmd_launch(args);
+	return cmd_launch(args, line);
 };
 
 void cmd_loop(void)
@@ -354,7 +358,7 @@ void cmd_loop(void)
 		printf("$");
 		line   = cmd_readline();
 		args   = tokenizer(line, TOKEN_DELIM);
-		status = cmd_execute(args);
+		status = cmd_execute(args, line);
 		free(line);
 		free(args);
 	};
