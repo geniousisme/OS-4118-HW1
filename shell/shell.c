@@ -297,7 +297,7 @@ char *cmd_readline(void)
 			buffer[pos] = c;
 		} else {
 			buffer[pos] = '\0';
-			//add_history(buffer);
+			add_history(buffer);
 			return buffer;
 		};
 		pos++;
@@ -358,7 +358,7 @@ int cmd_execute(char **args, char *line)
 void cmd_loop(void)
 {
 	char *line;
-	char **args;
+	//char **args;
 	int  status = 1;
 
 	change_path_env(DEFAULT_PATH);
@@ -366,10 +366,11 @@ void cmd_loop(void)
 	while (status) {
 		printf("$");
 		line   = cmd_readline();
-		args   = tokenizer(line, TOKEN_DELIM);
-		status = cmd_execute(args, line);
+		//args   = tokenizer(line, TOKEN_DELIM);
+		//status = cmd_execute(args, line);
 		free(line);
-		free(args);
+        break;
+		//free(args);
 	};
     free_history();
     // int i = 0;
