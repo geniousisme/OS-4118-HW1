@@ -87,7 +87,8 @@ void add_history(char *line)
 	strcpy(cmd, line);
 	cmd = strtok(cmd, TOKEN_DELIM);
 	if (cmd == NULL || strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
-		free(cmd);
+		printf("free mem!\n");
+        free(cmd);
         free(line_copy);
 		return;
 	};
@@ -296,7 +297,7 @@ char *cmd_readline(void)
 			buffer[pos] = c;
 		} else {
 			buffer[pos] = '\0';
-			add_history(buffer);
+			//add_history(buffer);
 			return buffer;
 		};
 		pos++;
