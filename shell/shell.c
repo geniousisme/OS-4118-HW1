@@ -143,6 +143,9 @@ void add_path(char *path_to_add)
 {
 	// char **curr_paths = malloc(sizeof(char *) * strlen(PATH_ENV));
 	char *path_env    = malloc(sizeof(char) * strlen(PATH_ENV));
+
+	strcpy(path_env, PATH_ENV);
+
 	char **curr_paths = tokenizer(path_env, PATH_DELIM);;
 
 	if (path_to_add == NULL) {
@@ -156,13 +159,14 @@ void add_path(char *path_to_add)
 	if (strcmp(PATH_ENV, DEFAULT_PATH) == 0)
 		new_path = string_concat(PATH_ENV, path_to_add);
 	else {
-		strcpy(path_env, PATH_ENV);
+		
 
 		// curr_paths = tokenizer(path_env, PATH_DELIM);
 		char **path;
 
 		for (path = curr_paths; *path; ++path) {
 			if (strcmp(*path, path_to_add) == 0) {
+				// printf("path_to_add: %s\n path: %s\n", path_to_add, *path);
 				free(path_env);
 				free(curr_paths);
 				return;
