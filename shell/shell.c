@@ -86,8 +86,7 @@ void add_history(char *line)
 	strcpy(line_copy, line);
 	strcpy(cmd, line);
 	cmd = strtok(cmd, TOKEN_DELIM);
-	if (cmd == NULL || strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
-		printf("free mem!\n");
+	if (strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
         free(cmd);
         free(line_copy);
 		return;
@@ -226,10 +225,6 @@ void free_history(void) {
         if (history[pos] != NULL)
             free(history[pos]);
     };
-    // while (history[pos] != NULL) {
-    //     free(history[pos]);
-    //     pos++;
-    // }; 
 };
 
 
@@ -279,9 +274,17 @@ int cmd_history(char **args)
 
 int cmd_exit(char **args)
 {   
-    // free_history();
-
     return 0;
+};
+
+int isAllSpaces(char *buffer) 
+{
+    int i;
+    for (i = 0; i < strlen(buffer); i++) {
+        if (buffer[i] != ' ')
+            return 0;
+    };
+    return 1;
 };
 
 char *cmd_readline(void)
@@ -297,7 +300,8 @@ char *cmd_readline(void)
 			buffer[pos] = c;
 		} else {
 			buffer[pos] = '\0';
-			add_history(buffer);
+            if (!isAllSpaces(buffer))
+                add_history(buffer);
 			return buffer;
 		};
 		pos++;
@@ -367,17 +371,11 @@ void cmd_loop(void)
 		printf("$");
 		line   = cmd_readline();
 		args   = tokenizer(line, TOKEN_DELIM);
-		//status = cmd_execute(args, line);
+		status = cmd_execute(args, line);
 		free(line);
-        break;
-		free(args);
+        free(args);		
 	};
     free_history();
-    // int i = 0;
-    // for (; i < MAX_HIST_SIZE + 1; i++ ) {
-    //     if (history[i] != NULL)
-    //         printf("history[%d]: %s\n", i, history[i]);
-    // };
 };
 
 int main(int argc, char **argv)
