@@ -331,8 +331,11 @@ int cmd_launch(char **args, char *line)
 		do {
 			waitpid(pid, &status, WUNTRACED);
 		} while (!(WIFEXITED(status) || WIFSIGNALED(status)));
-	} else 
+	} else {
+        free(args);
+        free(line);
 		perror("error");
+    };
 	return 1;
 };
 
@@ -368,6 +371,11 @@ void cmd_loop(void)
 		free(args);
 	};
     free_history();
+    // int i = 0;
+    // for (; i < MAX_HIST_SIZE + 1; i++ ) {
+    //     if (history[i] != NULL)
+    //         printf("history[%d]: %s\n", i, history[i]);
+    // };
 };
 
 int main(int argc, char **argv)
