@@ -141,11 +141,14 @@ char **tokenizer(char *line, char *delim)
 
 void add_path(char *path_to_add)
 {
-	char **curr_paths = malloc(sizeof(char *) * strlen(PATH_ENV));
+	// char **curr_paths = malloc(sizeof(char *) * strlen(PATH_ENV));
 	char *path_env    = malloc(sizeof(char) * strlen(PATH_ENV));
+	char **curr_paths = tokenizer(path_env, PATH_DELIM);;
 
 	if (path_to_add == NULL) {
 		fprintf(stderr, "error: can't add NULL path.\n");
+		free(curr_paths);
+		free(path_env);
 		return;
 	};
 	char *new_path, *tmp_path = NULL;
@@ -155,7 +158,7 @@ void add_path(char *path_to_add)
 	else {
 		strcpy(path_env, PATH_ENV);
 
-		curr_paths = tokenizer(path_env, PATH_DELIM);
+		// curr_paths = tokenizer(path_env, PATH_DELIM);
 		char **path;
 
 		for (path = curr_paths; *path; ++path) {
