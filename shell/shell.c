@@ -129,6 +129,7 @@ char **tokenizer(char *line, char *delim)
 			if (!tokens) {
 				fprintf(stderr, "allocation error!!\n");
                 free(tokens);
+                free(line);
 				exit(EXIT_FAILURE);
 			};
 		};
