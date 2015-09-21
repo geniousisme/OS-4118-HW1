@@ -41,8 +41,8 @@ int cmd_pwd(char **args)
 		perror("error");
 	else {
 		printf("%s\n", buffer);
-		free(buffer);
 	};
+	free(buffer);
 	return 1;
 };
 
@@ -135,12 +135,11 @@ char **tokenizer(char *line, char *delim)
 
 void add_path(char *path_to_add)
 {
-	// char **curr_paths = malloc(sizeof(char *) * strlen(PATH_ENV));
 	char *path_env    = malloc(sizeof(char) * strlen(PATH_ENV));
 
 	strcpy(path_env, PATH_ENV);
 
-	char **curr_paths = tokenizer(path_env, PATH_DELIM);;
+	char **curr_paths = tokenizer(path_env, PATH_DELIM);
 
 	if (path_to_add == NULL) {
 		fprintf(stderr, "error: can't add NULL path.\n");
@@ -153,21 +152,15 @@ void add_path(char *path_to_add)
 	if (strcmp(PATH_ENV, DEFAULT_PATH) == 0)
 		new_path = string_concat(PATH_ENV, path_to_add);
 	else {
-		
-
-		// curr_paths = tokenizer(path_env, PATH_DELIM);
 		char **path;
 
 		for (path = curr_paths; *path; ++path) {
 			if (strcmp(*path, path_to_add) == 0) {
-				// printf("path_to_add: %s\n path: %s\n", path_to_add, *path);
 				free(path_env);
 				free(curr_paths);
 				return;
 			};
 		};
-		// new_path = string_concat(PATH_ENV, PATH_DELIM);
-		// new_path = string_concat(new_path, path_to_add);
 		tmp_path = string_concat(PATH_ENV, PATH_DELIM);
 		new_path = string_concat(tmp_path, path_to_add);
 	};
@@ -186,36 +179,21 @@ void delete_path(char *path_to_delete)
 		fprintf(stderr, "error: can't delete NULL path.\n");
 	else {
 		char *path_env  = malloc(sizeof(char) * strlen(PATH_ENV));
-		
+
 		strcpy(path_env, PATH_ENV);
-		
+
 		char **paths    = tokenizer(path_env, PATH_DELIM);
-		// char *new_path  = "" ;//,*tmp_path = "";
 		char **p;
+
 		change_path_env(DEFAULT_PATH);
-		/*for (p = paths; *p; ++p) {
-			if (strcmp(*p, path_to_delete) == 0)
-				continue;
-			if (strcmp(new_path, "") == 0)
-				new_path = string_concat(new_path, *p);
-			else {
-				// new_path = string_concat(new_path, PATH_DELIM);
-				// new_path = string_concat(new_path, *p);
-				tmp_path = string_concat(tmp_path, PATH_DELIM);
-				new_path = string_concat(tmp_path, *p);
-			};
-		};*/
 		for (p = paths; *p; ++p) {
 			if (strcmp(*p, path_to_delete) == 0)
 				continue;
-			else {
+			else
 				add_path(*p);
-			};
 		};
 		free(paths);
 		free(path_env);
-		// if (strcmp(new_path, "") != 0)
-		// 	free(new_path);
 	};
 	return;
 };
@@ -325,7 +303,6 @@ char *cmd_readline(void)
 		};
 		pos++;
 		/* if exceed the max buffer size, realloc */
-		/* TODO: need to make following functionize */
 		if (pos >= buffer_size) {
 			buffer_size += MAX_BUFF_SIZE;
 			buffer = realloc(buffer, buffer_size);
@@ -356,8 +333,6 @@ int cmd_launch(char **args, char *line)
 			waitpid(pid, &status, WUNTRACED);
 		} while (!(WIFEXITED(status) || WIFSIGNALED(status)));
 	} else {
-		free(args);
-		free(line);
 		perror("error");
 	};
 	return 1;
