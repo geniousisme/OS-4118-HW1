@@ -1,0 +1,80 @@
+* Code Structure:
+
+hmwk1/shell/ —- shell.c
+             |
+              - shell.h
+             
+  - shell.c
+    The implementation of w4118_sh. This file is the entry point of w4118_sh. Basiacally I put all the function codes in this file.
+ 
+  - shell.h
+    some libraries and defined variables.
+  
+* Design
+  
+  there are three main parts for this shell:
+  1. cmd_readline
+  2. tokenizer
+  3. cmd_execute
+  4. built-in commands & cmd_launch
+
+  cmd_readline, tokenizer, and cmd_execute are all in the cmd_loop function.
+
+  - cmd_readline
+
+    once input something, I use getchar to get each character from stdout and allocated a char buffer to contain the input. The buffers would be detect the current length of input and decide to extend itself or not. I know realine function can automatically assign memory for me, but it would be a little troublesome to detect if there is any EOF in the input, so I maintain my original design.
+
+  - tokenizer
+
+    I use strtok to iteratively get the token and store all the tokens into one tokens char pointer array, then pass it to cmd_execute
+  
+  - cmd_execute
+
+    cmd_execute would take the tokens[0] to identify whether it is built-in command or not, it it is built-in command, it will be execute in parent process; if it is not built-in command, then it will call cmd_launch function and execute command in child process.
+  
+  - built-in commands
+
+    there are several built-in commands:
+    1. cd
+    2. pwd
+    3. path
+    4. history
+    5. exit
+
+    > cd
+
+      When the first argument (the second token) is specified, then the shell uses chdir() to switch the working directory to the <argument 1>, and I let chdir() to check errors on its own
+
+    > pwd
+
+      use getcwd to show the current working directory.
+
+    > path
+
+      Use the self-defined path utility to add/delete path.
+      
+      - add_path
+      add_path will get the path env variable from getenv("PATH"), tokenize the path env by ":", then append the latest path to the tokens. Finally, I use my own string concat function put combine the string together and use setenv to change the path env.
+
+      - delete_path
+      Directly get the path env from getenv, anf tokenize it with ":", then look for the path we want to delete in the path env, use add_path to add path env one by one.
+
+      when use call path, I simply repsonse the getenv result.
+
+    > history
+
+    use one global variable to store the history result, and if user use history command with offest, I will check if the offset is in range or not, then add the record to history too. When user inpur -c param, then I will free all histories and init history again. And before exit the program, I also free history too to avoid memory leaks.
+
+    > exit
+
+      When the input is only “exit”, then the shell simply jumps out of the loop and terminate.
+ 
+ * Test
+   - self-modified tester
+   - checkpatch.pl: check coding style
+   - valgrind: check if there are memory leak or not.
+
+ * Reference
+   - http://www.die.net/
+   - https://piazza.com/class/iclyl8kl2cc2o4
+   - http://www.tutorialspoint.com/listtutorials/linux/1

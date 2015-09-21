@@ -1,20 +1,5 @@
-#include <sys/wait.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
 #include "shell.h"
 
-#define MAX_HIST_SIZE     100
-#define MAX_BUFF_SIZE     1024
-#define MAX_TOK_BUFF_SIZE 64
-#define DEFAULT_PATH      ""
-#define TOKEN_DELIM       " \t\n\r"
-#define PATH_DELIM        ":"
-#define PATH_ENV          getenv("PATH")
-
-char *origin_path_env;
 char *history[MAX_HIST_SIZE + 1];
 
 char *builtin_str[] = {
@@ -56,8 +41,8 @@ int cmd_pwd(char **args)
 		perror("error");
 	else {
 		printf("%s\n", buffer);
-		free(buffer);
 	};
+	free(buffer);
 	return 1;
 };
 
@@ -93,8 +78,9 @@ void add_history(char *line)
 	strcpy(line_copy, line);
 	strcpy(cmd, line);
 	cmd = strtok(cmd, TOKEN_DELIM);
-	if (cmd == NULL || strcmp(cmd, "history") == 0) {
+	if (strcmp(cmd, "history") == 0 || strcmp(cmd, "exit") == 0) {
 		free(cmd);
+		free(line_copy);
 		return;
 	};
 
@@ -107,13 +93,13 @@ void add_history(char *line)
 
 	/* update the history list  */
 	if (pos >= MAX_HIST_SIZE) {
-		int i;
+		int i = 0;
 
+		free(history[i]);
 		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
 			history[i - 1] = history[i];
 		history[i - 1] = NULL;
 	};
-
 	free(cmd);
 	return;
 };
@@ -129,12 +115,14 @@ char **tokenizer(char *line, char *delim)
 	while (token != NULL) {
 		tokens[pos] = token;
 		pos++;
-		/* if token exceed the max token buffer size, relloc */
+		/* if token exceed the max token buffer size, realloc */
 		if (pos >= buffer_size) {
 			buffer_size += MAX_TOK_BUFF_SIZE;
 			tokens = realloc(tokens, buffer_size * sizeof(char *));
 			if (!tokens) {
 				fprintf(stderr, "allocation error!!\n");
+				free(tokens);
+				free(line);
 				exit(EXIT_FAILURE);
 			};
 		};
@@ -147,21 +135,23 @@ char **tokenizer(char *line, char *delim)
 
 void add_path(char *path_to_add)
 {
-	char **curr_paths = malloc(sizeof(char *) * strlen(PATH_ENV));
 	char *path_env    = malloc(sizeof(char) * strlen(PATH_ENV));
+
+	strcpy(path_env, PATH_ENV);
+
+	char **curr_paths = tokenizer(path_env, PATH_DELIM);
 
 	if (path_to_add == NULL) {
 		fprintf(stderr, "error: can't add NULL path.\n");
+		free(curr_paths);
+		free(path_env);
 		return;
 	};
-	char *new_path;
+	char *new_path, *tmp_path = NULL;
 	/* change to get path env from getenv, but not self_path */
 	if (strcmp(PATH_ENV, DEFAULT_PATH) == 0)
 		new_path = string_concat(PATH_ENV, path_to_add);
 	else {
-		strcpy(path_env, PATH_ENV);
-
-		curr_paths = tokenizer(path_env, PATH_DELIM);
 		char **path;
 
 		for (path = curr_paths; *path; ++path) {
@@ -171,12 +161,13 @@ void add_path(char *path_to_add)
 				return;
 			};
 		};
-
-		new_path = string_concat(PATH_ENV, PATH_DELIM);
-		new_path = string_concat(new_path, path_to_add);
+		tmp_path = string_concat(PATH_ENV, PATH_DELIM);
+		new_path = string_concat(tmp_path, path_to_add);
 	};
 
 	change_path_env(new_path);
+	if (tmp_path != NULL)
+		free(tmp_path);
 	free(new_path);
 	free(path_env);
 	free(curr_paths);
@@ -187,24 +178,22 @@ void delete_path(char *path_to_delete)
 	if (path_to_delete == NULL)
 		fprintf(stderr, "error: can't delete NULL path.\n");
 	else {
-		char *path_env  = PATH_ENV;
+		char *path_env  = malloc(sizeof(char) * strlen(PATH_ENV));
+
+		strcpy(path_env, PATH_ENV);
+
 		char **paths    = tokenizer(path_env, PATH_DELIM);
-		char *new_path  = "";
 		char **p;
 
+		change_path_env(DEFAULT_PATH);
 		for (p = paths; *p; ++p) {
 			if (strcmp(*p, path_to_delete) == 0)
 				continue;
-			if (strcmp(new_path, "") == 0)
-				new_path = string_concat(new_path, *p);
-			else {
-				new_path = string_concat(new_path, PATH_DELIM);
-				new_path = string_concat(new_path, *p);
-			};
+			else
+				add_path(*p);
 		};
-		change_path_env(new_path);
-		if (strcmp(new_path, "") != 0)
-			free(new_path);
+		free(paths);
+		free(path_env);
 	};
 	return;
 };
@@ -218,15 +207,29 @@ int cmd_path(char **args)
 			delete_path(args[2]);
 		else if (strcmp(args[1], "+") == 0)
 			add_path(args[2]);
+		else
+			fprintf(stderr, "error: wrong params for path cmd.\n");
 	};
 	return 1;
 };
+
+void free_history(void)
+{
+	int pos;
+
+	for (pos = 0; pos < MAX_HIST_SIZE + 1; pos++) {
+		if (history[pos] != NULL)
+			free(history[pos]);
+	};
+};
+
 
 void init_history(void)
 {
 	int pos = 0;
 
-	for ( ; pos < MAX_HIST_SIZE; pos++) {
+	free_history();
+	for ( ; pos < MAX_HIST_SIZE + 1; pos++) {
 		history[pos] = NULL;
 	};
 };
@@ -250,11 +253,12 @@ int cmd_history(char **args)
 		int offset = strtol(args[1], NULL, 10);
 
 		if (errno != ERANGE && errno != EINVAL) {
-			if (offset < MAX_HIST_SIZE && history[offset] != NULL)
+			if (offset < MAX_HIST_SIZE && history[offset] != NULL) {
 				printf("%d %s\n", offset, history[offset]);
-			else {
+				add_history(history[offset]);
+			} else {
 				fprintf(stderr,
-				"error: no history or offset out of range");
+				"error: no history or offset out of range\n");
 			};
 		} else {
 			fprintf(stderr,
@@ -267,6 +271,17 @@ int cmd_history(char **args)
 int cmd_exit(char **args)
 {
 	return 0;
+};
+
+int isAllSpaces(char *buffer)
+{
+	int i;
+
+	for (i = 0; i < strlen(buffer); i++) {
+		if (buffer[i] != ' ')
+			return 0;
+	};
+	return 1;
 };
 
 char *cmd_readline(void)
@@ -282,43 +297,48 @@ char *cmd_readline(void)
 			buffer[pos] = c;
 		} else {
 			buffer[pos] = '\0';
-			add_history(buffer);
+			if (!isAllSpaces(buffer))
+				add_history(buffer);
 			return buffer;
 		};
 		pos++;
 		/* if exceed the max buffer size, realloc */
-		/* TODO: need to make following functionize */
 		if (pos >= buffer_size) {
 			buffer_size += MAX_BUFF_SIZE;
 			buffer = realloc(buffer, buffer_size);
 			if (!buffer) {
 				fprintf(stderr, "allocation error!!\n");
+				free(buffer);
 				exit(EXIT_FAILURE);
 			};
 		};
 	};
 };
 
-int cmd_launch(char **args)
+int cmd_launch(char **args, char *line)
 {
 	pid_t pid;
 	int status;
 
 	pid = fork();
 	if (pid == 0) {
-		if (execvp(args[0], args) ==  -1)
+		if (execvp(args[0], args) ==  -1) {
+			free(args);
+			free(line);
 			perror("error");
+		};
 		exit(EXIT_FAILURE);
 	} else if (pid > 0) {
 		do {
 			waitpid(pid, &status, WUNTRACED);
 		} while (!(WIFEXITED(status) || WIFSIGNALED(status)));
-	} else
+	} else {
 		perror("error");
+	};
 	return 1;
 };
 
-int cmd_execute(char **args)
+int cmd_execute(char **args, char *line)
 {
 	int i;
 
@@ -330,7 +350,7 @@ int cmd_execute(char **args)
 		if (strcmp(args[0], builtin_str[i]) == 0)
 			return (*builtin_func[i])(args);
 	};
-	return cmd_launch(args);
+	return cmd_launch(args, line);
 };
 
 void cmd_loop(void)
@@ -342,13 +362,14 @@ void cmd_loop(void)
 	change_path_env(DEFAULT_PATH);
 	init_history();
 	while (status) {
-		printf("$ ");
+		printf("$");
 		line   = cmd_readline();
 		args   = tokenizer(line, TOKEN_DELIM);
-		status = cmd_execute(args);
+		status = cmd_execute(args, line);
 		free(line);
 		free(args);
 	};
+	free_history();
 };
 
 int main(int argc, char **argv)
