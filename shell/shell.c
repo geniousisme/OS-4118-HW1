@@ -1,9 +1,3 @@
-#include <sys/wait.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
 #include "shell.h"
 
 char *history[MAX_HIST_SIZE + 1];

@@ -1,4 +1,11 @@
-#define MAX_HIST_SIZE     2
+#include <sys/wait.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+
+#define MAX_HIST_SIZE     100
 #define MAX_BUFF_SIZE     1024
 #define MAX_TOK_BUFF_SIZE 64
 #define DEFAULT_PATH      ""
