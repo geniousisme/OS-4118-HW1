@@ -201,7 +201,6 @@ void delete_path(char *path_to_delete)
 			return;
 		};
 	};
-
 };
 
 int cmd_path(char **args)
@@ -232,7 +231,7 @@ void free_history(void)
 void free_path(void)
 {
 	int pos;
-	int curr_path_len = sizeof(path_list) / sizeof(char *);
+	int curr_path_len = path_len();
 
 	for (pos = 0; pos < curr_path_len; pos++) {
 		if (path_list[pos] != NULL)
