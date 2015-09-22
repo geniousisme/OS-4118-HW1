@@ -267,9 +267,10 @@ int cmd_history(char **args)
 	else {
 		/* set errno = 0 before you use strtol first. */
 		errno = 0;
-		int offset = strtol(args[1], NULL, 10);
+		char *to_convert = args[1];
+		int offset = strtol(args[1], &to_convert, 10);
 
-		if (errno != ERANGE && errno != EINVAL) {
+		if (errno != ERANGE && errno != EINVAL && to_convert != args[1]) {
 			if (offset < MAX_HIST_SIZE && history[offset] != NULL) {
 				printf("%d %s\n", offset, history[offset]);
 				add_history(history[offset]);
