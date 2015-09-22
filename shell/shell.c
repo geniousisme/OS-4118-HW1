@@ -426,7 +426,7 @@ void cmd_loop(void)
 {	
 	char *line;
 	char **args;
-	int  status = 1;
+	int  status = 1;   
 
 	init_path();
 	init_history();
