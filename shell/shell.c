@@ -5,7 +5,7 @@ char **path_list;
 
 void init_path(void)
 {
-	path_list = malloc(sizeof(char *) * PATH_SIZE);
+	path_list = malloc(sizeof(char *) * MAX_BUFF_SIZE);
 };
 
 char *builtin_str[] = {
@@ -62,21 +62,6 @@ char *string_concat(char *str1, char *str2)
 	return result;
 };
 
-void change_path_env(char *new_path)
-{
-	if (new_path == NULL)
-		fprintf(stderr, "error: error! no value for PATH\n");
-	else {
-		if (strcmp(new_path, DEFAULT_PATH) == 0)
-			/* change the PATH env to empty*/
-			setenv("PATH", "", 1);
-
-		else
-			setenv("PATH", new_path, 1);
-	};
-	return;
-};
-
 void add_history(char *line)
 {
 	char *line_copy = malloc(sizeof(char) * (strlen(line) + 1));
@@ -103,6 +88,7 @@ void add_history(char *line)
 		int i = 0;
 
 		free(history[i]);
+		history[i] = malloc(sizeof(char) * MAX_BUFF_SIZE);
 		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
 			history[i - 1] = history[i];
 		history[i - 1] = NULL;
@@ -143,7 +129,7 @@ int path_len(void)
 {
 	int i = 0, count = 0;
 
-	while(path_list[i] != NULL) {
+	while (path_list[i] != NULL) {
 		count++;
 		i++;
 	};
@@ -154,7 +140,7 @@ int path_str_len(void)
 {
 	int length = 0, i = 0;
 
-	while(path_list[i] != NULL) {
+	while (path_list[i] != NULL) {
 		length += strlen(path_list[i]);
 		i++;
 	};
@@ -167,20 +153,23 @@ void show_path(void)
 	int curr_path_len = path_len(), i;
 
 	for (i = 0; i < curr_path_len; i++) {
-		if (i == 0)	
+		if (i == 0)
 			printf("%s", path_list[i]);
 		else {
 			printf(":");
 			printf("%s", path_list[i]);
-		};	
+		};
 	};
 	printf("\n");
 };
 
 void add_path(char *path_to_add)
-{	
+{
+	if (path_to_add == NULL)
+		return;
+
 	char *new_path = malloc(sizeof(char) * strlen(path_to_add) + 1);
-	int  i 		   = 0;
+	int  i         = 0;
 
 	strcpy(new_path, path_to_add);
 	while (path_list[i] != NULL) {
@@ -195,6 +184,9 @@ void add_path(char *path_to_add)
 
 void delete_path(char *path_to_delete)
 {
+	if (path_to_delete == NULL)
+		return;
+
 	int i = 0, curr_path_len = path_len();
 
 	while (path_list[i] != 0) {
@@ -202,19 +194,19 @@ void delete_path(char *path_to_delete)
 			i++;
 		else {
 			free(path_list[i]);
+			path_list[i] = malloc(sizeof(char) * MAX_BUFF_SIZE);
 			for (i = i + 1; i < curr_path_len; i++)
 				path_list[i - 1] = path_list[i];
 			path_list[i - 1] = NULL;
-			return; 
+			return;
 		};
 	};
-	
+
 };
 
 int cmd_path(char **args)
 {
 	if (args[1] == NULL)
-		// printf("%s\n", PATH_ENV);
 		show_path();
 	else {
 		if (strcmp(args[1], "-") == 0)
@@ -241,6 +233,7 @@ void free_path(void)
 {
 	int pos;
 	int curr_path_len = sizeof(path_list) / sizeof(char *);
+
 	for (pos = 0; pos < curr_path_len; pos++) {
 		if (path_list[pos] != NULL)
 			free(path_list[pos]);
@@ -339,50 +332,55 @@ char *cmd_readline(void)
 	};
 };
 
+
 int is_executable(char **args)
-{	
+{
 	/* for /bin/ls case */
 	if (args[0][0] == '/')
-		/*
-		false(0): execvp return -1, 0
-		succeed(1): execvp return NULL, 1
-		*/
+		/* false(0): execvp return -1, 0 */
+		/* succeed(1): execvp return NULL, 1*/
 		return execvp(args[0], args) != -1;
-	else {
-		/* for /bin/ls case */
-		char *curr_dir = malloc(sizeof(char) * 64);
-		
-		getcwd(curr_dir, -1);
+	/* for /bin/ls case */
+	char *curr_dir    = malloc(sizeof(char) * 64);
+	int  main_cmd_len = strlen(args[0]) + 1;
+	int  cmd_size     = MAX_CMD_SIZE;
 
-		char *exec_cmd = malloc(sizeof(char) * 65535); // add_realloc
+	getcwd(curr_dir, -1);
 
-		strcpy(exec_cmd, curr_dir);
-		strcat(exec_cmd, "/");
-		strcat(exec_cmd, args[0]);
-		if (execvp(exec_cmd, args) != -1) {
-			free(curr_dir);
-			free(exec_cmd);
-			return 1;
-		} else {
-			/* check all path + "/" + args[0] combinations*/
-			int i, curr_path_len = path_len();
-			
-			for (i = 0; i < curr_path_len; i++) {
-				strcpy(exec_cmd, path_list[i]);
-				strcat(exec_cmd, "/");
-				strcat(exec_cmd, args[0]);
-				if (execvp(exec_cmd, args) != -1) {
-					free(curr_dir);
-					free(exec_cmd);
-					return 1;
-				};
-			};
-			free(curr_dir);
-			free(exec_cmd);
-			return 0;
-		};
+	char *exec_cmd = malloc(sizeof(char) * cmd_size);
 
+	while (strlen(curr_dir) + main_cmd_len >= cmd_size) {
+		cmd_size += cmd_size;
+		exec_cmd = realloc(exec_cmd, cmd_size);
 	};
+	strcpy(exec_cmd, curr_dir);
+	strcat(exec_cmd, "/");
+	strcat(exec_cmd, args[0]);
+	if (execvp(exec_cmd, args) == -1) {
+		free(curr_dir);
+		/* check all path + "/" + args[0] combinations */
+		int i, curr_path_len = path_len();
+
+		for (i = 0; i < curr_path_len; i++) {
+			while (strlen(path_list[i]) + main_cmd_len
+							>= cmd_size) {
+				cmd_size += cmd_size;
+				exec_cmd = realloc(exec_cmd, cmd_size);
+			};
+			strcpy(exec_cmd, path_list[i]);
+			strcat(exec_cmd, "/");
+			strcat(exec_cmd, args[0]);
+			if (execvp(exec_cmd, args) != -1) {
+				free(exec_cmd);
+				return 1;
+			};
+		};
+		free(exec_cmd);
+		return 0;
+	};
+	free(curr_dir);
+	free(exec_cmd);
+	return 1;
 };
 
 int cmd_launch(char **args, char *line)
@@ -392,7 +390,6 @@ int cmd_launch(char **args, char *line)
 
 	pid = fork();
 	if (pid == 0) {
-		// if (execvp(args[0], args) ==  -1) {
 		if (!is_executable(args)) {
 			free(args);
 			free(line);
@@ -429,8 +426,8 @@ void cmd_loop(void)
 	char *line;
 	char **args;
 	int  status = 1;
+
 	init_path();
-	// change_path_env(DEFAULT_PATH);
 	init_history();
 	while (status) {
 		printf("$");
