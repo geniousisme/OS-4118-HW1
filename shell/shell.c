@@ -88,7 +88,7 @@ void add_history(char *line)
 		int i = 0;
 
 		free(history[i]);
-		history[i] = malloc(sizeof(char) * MAX_BUFF_SIZE);
+		// history[i] = malloc(sizeof(char) * MAX_BUFF_SIZE);
 		for (i = 1; i < MAX_HIST_SIZE + 1; i++)
 			history[i - 1] = history[i];
 		history[i - 1] = NULL;
@@ -194,7 +194,7 @@ void delete_path(char *path_to_delete)
 			i++;
 		else {
 			free(path_list[i]);
-			path_list[i] = malloc(sizeof(char) * MAX_BUFF_SIZE);
+			// path_list[i] = malloc(sizeof(char) * MAX_BUFF_SIZE);
 			for (i = i + 1; i < curr_path_len; i++)
 				path_list[i - 1] = path_list[i];
 			path_list[i - 1] = NULL;
