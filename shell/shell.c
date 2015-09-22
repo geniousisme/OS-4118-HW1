@@ -1,6 +1,12 @@
 #include "shell.h"
 
 char *history[MAX_HIST_SIZE + 1];
+char **path_list;
+
+void init_path(void)
+{
+	path_list = malloc(sizeof(char *) * MAX_BUFF_SIZE);
+};
 
 char *builtin_str[] = {
 	"cd",
@@ -54,20 +60,6 @@ char *string_concat(char *str1, char *str2)
 	strcpy(result, str1);
 	strcat(result, str2);
 	return result;
-};
-
-void change_path_env(char *new_path)
-{
-	if (new_path == NULL)
-		fprintf(stderr, "error: error! no value for PATH\n");
-	else {
-		if (strcmp(new_path, DEFAULT_PATH) == 0)
-			/* change the PATH env to empty*/
-			setenv("PATH", "", 1);
-		else
-			setenv("PATH", new_path, 1);
-	};
-	return;
 };
 
 void add_history(char *line)
@@ -132,76 +124,90 @@ char **tokenizer(char *line, char *delim)
 	return tokens;
 };
 
+int path_len(void)
+{
+	int i = 0, count = 0;
+
+	while (path_list[i] != NULL) {
+		count++;
+		i++;
+	};
+	return count;
+};
+
+int path_str_len(void)
+{
+	int length = 0, i = 0;
+
+	while (path_list[i] != NULL) {
+		length += strlen(path_list[i]);
+		i++;
+	};
+	/* return the true final display length of path, include ':' numbers */
+	return length + path_len() - 1;
+};
+
+void show_path(void)
+{
+	int curr_path_len = path_len(), i;
+
+	for (i = 0; i < curr_path_len; i++) {
+		if (i == 0)
+			printf("%s", path_list[i]);
+		else {
+			printf(":");
+			printf("%s", path_list[i]);
+		};
+	};
+	printf("\n");
+};
 
 void add_path(char *path_to_add)
 {
-	char *path_env    = malloc(sizeof(char) * strlen(PATH_ENV));
-
-	strcpy(path_env, PATH_ENV);
-
-	char **curr_paths = tokenizer(path_env, PATH_DELIM);
-
-	if (path_to_add == NULL) {
-		fprintf(stderr, "error: can't add NULL path.\n");
-		free(curr_paths);
-		free(path_env);
+	if (path_to_add == NULL)
 		return;
-	};
-	char *new_path, *tmp_path = NULL;
-	/* change to get path env from getenv, but not self_path */
-	if (strcmp(PATH_ENV, DEFAULT_PATH) == 0)
-		new_path = string_concat(PATH_ENV, path_to_add);
-	else {
-		char **path;
 
-		for (path = curr_paths; *path; ++path) {
-			if (strcmp(*path, path_to_add) == 0) {
-				free(path_env);
-				free(curr_paths);
-				return;
-			};
+	char *new_path = malloc(sizeof(char) * strlen(path_to_add) + 1);
+	int  i         = 0;
+
+	strcpy(new_path, path_to_add);
+	while (path_list[i] != NULL) {
+		if (strcmp(path_list[i], path_to_add) != 0)
+			i++;
+		else {
+			/* already in path_list, skip */
+			free(new_path);
+			return;
 		};
-		tmp_path = string_concat(PATH_ENV, PATH_DELIM);
-		new_path = string_concat(tmp_path, path_to_add);
 	};
-
-	change_path_env(new_path);
-	if (tmp_path != NULL)
-		free(tmp_path);
-	free(new_path);
-	free(path_env);
-	free(curr_paths);
+	path_list[i] = new_path;
 };
 
 void delete_path(char *path_to_delete)
 {
 	if (path_to_delete == NULL)
-		fprintf(stderr, "error: can't delete NULL path.\n");
-	else {
-		char *path_env  = malloc(sizeof(char) * strlen(PATH_ENV));
+		return;
 
-		strcpy(path_env, PATH_ENV);
+	int i = 0, curr_path_len = path_len();
 
-		char **paths    = tokenizer(path_env, PATH_DELIM);
-		char **p;
-
-		change_path_env(DEFAULT_PATH);
-		for (p = paths; *p; ++p) {
-			if (strcmp(*p, path_to_delete) == 0)
-				continue;
-			else
-				add_path(*p);
+	while (path_list[i] != 0) {
+		if (strcmp(path_list[i], path_to_delete) != 0)
+			i++;
+		else {
+			free(path_list[i]);
+			for (i = i + 1; i < curr_path_len; i++)
+				path_list[i - 1] = path_list[i];
+			path_list[i - 1] = NULL;
+			return;
 		};
-		free(paths);
-		free(path_env);
 	};
-	return;
+
 };
 
 int cmd_path(char **args)
 {
 	if (args[1] == NULL)
-		printf("%s\n", PATH_ENV);
+		show_path();
 	else {
 		if (strcmp(args[1], "-") == 0)
 			delete_path(args[2]);
@@ -223,6 +229,17 @@ void free_history(void)
 	};
 };
 
+void free_path(void)
+{
+	int pos;
+	int curr_path_len = sizeof(path_list) / sizeof(char *);
+
+	for (pos = 0; pos < curr_path_len; pos++) {
+		if (path_list[pos] != NULL)
+			free(path_list[pos]);
+	};
+	free(path_list);
+};
 
 void init_history(void)
 {
@@ -273,7 +290,7 @@ int cmd_exit(char **args)
 	return 0;
 };
 
-int isAllSpaces(char *buffer)
+int is_all_spaces(char *buffer)
 {
 	int i;
 
@@ -297,7 +314,7 @@ char *cmd_readline(void)
 			buffer[pos] = c;
 		} else {
 			buffer[pos] = '\0';
-			if (!isAllSpaces(buffer))
+			if (!is_all_spaces(buffer))
 				add_history(buffer);
 			return buffer;
 		};
@@ -315,6 +332,57 @@ char *cmd_readline(void)
 	};
 };
 
+
+int is_executable(char **args)
+{
+	/* for /bin/ls case */
+	if (args[0][0] == '/')
+		/* false(0): execvp return -1, 0 */
+		/* succeed(1): execvp return NULL, 1*/
+		return execvp(args[0], args) != -1;
+	/* for /bin/ls case */
+	char *curr_dir    = malloc(sizeof(char) * 64);
+	int  main_cmd_len = strlen(args[0]) + 1;
+	int  cmd_size     = MAX_CMD_SIZE;
+
+	getcwd(curr_dir, -1);
+
+	char *exec_cmd = malloc(sizeof(char) * cmd_size);
+
+	while (strlen(curr_dir) + main_cmd_len >= cmd_size) {
+		cmd_size += cmd_size;
+		exec_cmd = realloc(exec_cmd, cmd_size);
+	};
+	strcpy(exec_cmd, curr_dir);
+	strcat(exec_cmd, "/");
+	strcat(exec_cmd, args[0]);
+	if (execvp(exec_cmd, args) == -1) {
+		free(curr_dir);
+		/* check all path + "/" + args[0] combinations */
+		int i, curr_path_len = path_len();
+
+		for (i = 0; i < curr_path_len; i++) {
+			while (strlen(path_list[i]) + main_cmd_len
+							>= cmd_size) {
+				cmd_size += cmd_size;
+				exec_cmd = realloc(exec_cmd, cmd_size);
+			};
+			strcpy(exec_cmd, path_list[i]);
+			strcat(exec_cmd, "/");
+			strcat(exec_cmd, args[0]);
+			if (execvp(exec_cmd, args) != -1) {
+				free(exec_cmd);
+				return 1;
+			};
+		};
+		free(exec_cmd);
+		return 0;
+	};
+	free(curr_dir);
+	free(exec_cmd);
+	return 1;
+};
+
 int cmd_launch(char **args, char *line)
 {
 	pid_t pid;
@@ -322,7 +390,7 @@ int cmd_launch(char **args, char *line)
 
 	pid = fork();
 	if (pid == 0) {
-		if (execvp(args[0], args) ==  -1) {
+		if (!is_executable(args)) {
 			free(args);
 			free(line);
 			perror("error");
@@ -359,7 +427,7 @@ void cmd_loop(void)
 	char **args;
 	int  status = 1;
 
-	change_path_env(DEFAULT_PATH);
+	init_path();
 	init_history();
 	while (status) {
 		printf("$");
@@ -370,6 +438,7 @@ void cmd_loop(void)
 		free(args);
 	};
 	free_history();
+	free_path();
 };
 
 int main(int argc, char **argv)

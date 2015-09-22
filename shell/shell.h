@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #define MAX_HIST_SIZE     100
+#define MAX_CMD_SIZE      65535
 #define MAX_BUFF_SIZE     1024
 #define MAX_TOK_BUFF_SIZE 64
 #define DEFAULT_PATH      ""
